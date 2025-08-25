@@ -59,7 +59,6 @@ class HandlerTest {
 
     @Test
     void registrar_debeRetornar201_cuandoEsExitoso() {
-        // Preparar
         when(mapper.toDomain(any(SolicitudRequest.class))).thenReturn(domain);
         when(useCase.registrar(any(Solicitud.class))).thenReturn(Mono.just(saved));
         when(mapper.toResponse(any(Solicitud.class))).thenReturn(response);
@@ -67,10 +66,8 @@ class HandlerTest {
         ServerRequest mockRequest = MockServerRequest.builder()
                 .body(Mono.just(request));
 
-        // Actuar
         Mono<ServerResponse> result = handler.registrar(mockRequest);
 
-        // Verificar
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
                         serverResponse.statusCode().is2xxSuccessful() &&
@@ -81,7 +78,6 @@ class HandlerTest {
 
     @Test
     void registrar_debeRetornar400_cuandoElUseCaseFalla() {
-        // Preparar
         when(mapper.toDomain(any(SolicitudRequest.class))).thenReturn(domain);
         when(useCase.registrar(any(Solicitud.class)))
                 .thenReturn(Mono.error(new IllegalArgumentException("Monto inválido")));
@@ -89,10 +85,8 @@ class HandlerTest {
         ServerRequest mockRequest = MockServerRequest.builder()
                 .body(Mono.just(request));
 
-        // Actuar
         Mono<ServerResponse> result = handler.registrar(mockRequest);
 
-        // Verificar
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
                         serverResponse.statusCode().is4xxClientError() &&
@@ -103,17 +97,14 @@ class HandlerTest {
 
     @Test
     void registrar_debeRetornar400_cuandoElMapeoFalla() {
-        // Preparar
         when(mapper.toDomain(any(SolicitudRequest.class)))
                 .thenThrow(new IllegalArgumentException("Error de mapeo"));
 
         ServerRequest mockRequest = MockServerRequest.builder()
                 .body(Mono.just(request));
 
-        // Actuar
         Mono<ServerResponse> result = handler.registrar(mockRequest);
 
-        // Verificar
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
                         serverResponse.statusCode().is4xxClientError() &&
@@ -124,13 +115,10 @@ class HandlerTest {
 
     @Test
     void registrar_debeRetornar400_cuandoElBodyEsVacio() {
-        // Preparar
         ServerRequest mockRequest = MockServerRequest.builder().body(Mono.empty());
 
-        // Actuar
         Mono<ServerResponse> result = handler.registrar(mockRequest);
 
-        // Verificar
         StepVerifier.create(result)
                 .expectError();
     }
