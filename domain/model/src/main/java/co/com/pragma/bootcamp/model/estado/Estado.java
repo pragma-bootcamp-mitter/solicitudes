@@ -1,4 +1,5 @@
 package co.com.pragma.bootcamp.model.estado;
+
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

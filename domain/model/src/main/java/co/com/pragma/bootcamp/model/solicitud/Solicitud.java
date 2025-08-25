@@ -1,4 +1,7 @@
 package co.com.pragma.bootcamp.model.solicitud;
+
+import co.com.pragma.bootcamp.model.estado.Estado;
+import co.com.pragma.bootcamp.model.tipoprestamo.TipoPrestamo;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +20,6 @@ public class Solicitud {
     private BigDecimal monto;
     private Integer plazoMeses;
     private String email;
-    private Integer idEstado;
-    private Integer idTipoPrestamo;
+    private Estado estado;
+    private TipoPrestamo tipoPrestamo;
 }

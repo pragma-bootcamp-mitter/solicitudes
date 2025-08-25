@@ -1,19 +1,21 @@
-package co.com.pragma.bootcamp.model.tipoprestamo;
+package co.com.pragma.bootcamp.r2dbc.entity;
 
-import lombok.Builder;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 
-@Getter
-@Setter
+@Data
+@Builder
+@Table("tipo_prestamo")
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
-public class TipoPrestamo {
-    private Integer id;
+public class TipoPrestamoData {
+    @Id
+    private Integer idTipoPrestamo;
     private String nombre;
     private BigDecimal montoMinimo;
     private BigDecimal montoMaximo;
