@@ -42,12 +42,12 @@ public class UseCasesConfigTest {
 
         @Mock
         private SolicitudRepository solicitudRepository;
+
         @Mock
         private TipoPrestamoRepository tipoPrestamoRepository;
+
         @Mock
         private AuthRepository authRepository;
-        @Mock
-        private Function<Mono<Solicitud>, Mono<Solicitud>> transactionalWrapper;
 
         @Bean
         public MyUseCase myUseCase() {
@@ -59,8 +59,7 @@ public class UseCasesConfigTest {
             return new RegistrarSolicitudUseCase(
                     solicitudRepository,
                     tipoPrestamoRepository,
-                    authRepository,
-                    transactionalWrapper
+                    authRepository
             );
         }
 
