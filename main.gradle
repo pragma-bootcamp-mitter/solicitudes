@@ -79,6 +79,15 @@ subprojects {
             csv.setRequired false
             html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
         }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        '**/MainApplication.class',
+                        '**/config/**/*.class',
+                        '**/mapper/**/*.class'
+                ])
+            }))
+        }
     }
 
 }

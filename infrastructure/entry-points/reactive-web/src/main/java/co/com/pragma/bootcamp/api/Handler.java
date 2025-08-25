@@ -5,12 +5,12 @@ import co.com.pragma.bootcamp.api.mapper.SolicitudDtoMapper;
 import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
-
 import java.util.Map;
 
 @Component
@@ -31,7 +31,7 @@ public class Handler {
                 .map(mapper::toResponse)
                 .doOnNext(resp -> log.info("Respuesta generada: {}", resp))
                 .flatMap(response ->
-                        ServerResponse.status(201)
+                        ServerResponse.status(HttpStatus.CREATED)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(response)
                 )

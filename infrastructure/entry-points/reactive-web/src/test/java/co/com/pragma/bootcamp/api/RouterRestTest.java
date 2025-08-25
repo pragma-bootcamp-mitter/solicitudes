@@ -4,57 +4,57 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-//
-//@ContextConfiguration(classes = {RouterRest.class, Handler.class})
-//@WebFluxTest
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+@WebFluxTest
 class RouterRestTest {
 
-//    @Autowired
-//    private WebTestClient webTestClient;
-//
-//    @Test
-//    void testListenGETUseCase() {
-//        webTestClient.get()
-//                .uri("/api/usecase/path")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .exchange()
-//                .expectStatus().isOk()
-//                .expectBody(String.class)
-//                .value(userResponse -> {
-//                            Assertions.assertThat(userResponse).isEmpty();
-//                        }
-//                );
-//    }
-//
-//    @Test
-//    void testListenGETOtherUseCase() {
-//        webTestClient.get()
-//                .uri("/api/otherusercase/path")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .exchange()
-//                .expectStatus().isOk()
-//                .expectBody(String.class)
-//                .value(userResponse -> {
-//                            Assertions.assertThat(userResponse).isEmpty();
-//                        }
-//                );
-//    }
-//
-//    @Test
-//    void testListenPOSTUseCase() {
-//        webTestClient.post()
-//                .uri("/api/usecase/otherpath")
-//                .accept(MediaType.APPLICATION_JSON)
-//                .bodyValue("")
-//                .exchange()
-//                .expectStatus().isOk()
-//                .expectBody(String.class)
-//                .value(userResponse -> {
-//                            Assertions.assertThat(userResponse).isEmpty();
-//                        }
-//                );
-//    }
+    @Autowired
+    private WebTestClient webTestClient;
+
+    @MockitoBean
+    private Handler handler;
+
+    private static final String BASE_PATH = "/api/v1/solicitud";
+
+    @Test
+    void post_debeSerEnrutadoAlHandler() {
+        when(handler.registrar(any(ServerRequest.class)))
+                .thenReturn(ServerResponse.status(HttpStatus.CREATED)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Mono.just(Map.of("id", "1")), Map.class)); // Se usa .body()
+
+        webTestClient.post()
+                .uri(BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.id").isEqualTo("1");
+    }
+
+    @Test
+    void get_debeRetornarNotFound_cuandoNoEstaConfigurado() {
+        webTestClient.get()
+                .uri(BASE_PATH)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(HttpStatus.NOT_FOUND.value())
+                .jsonPath("$.error").isEqualTo("Not Found");
+    }
 }
