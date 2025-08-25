@@ -4,6 +4,7 @@ import co.com.pragma.bootcamp.api.dto.SolicitudRequest;
 import co.com.pragma.bootcamp.api.dto.SolicitudResponse;
 import co.com.pragma.bootcamp.api.mapper.SolicitudDtoMapper;
 import co.com.pragma.bootcamp.model.solicitud.Solicitud;
+import co.com.pragma.bootcamp.model.solicitud.gateways.SolicitudRepository;
 import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
@@ -30,6 +32,9 @@ class HandlerTest {
 
     @Mock
     private SolicitudDtoMapper mapper;
+
+    @Mock
+    private SolicitudRepository solicitudRepository;
 
     @InjectMocks
     private Handler handler;
@@ -121,5 +126,54 @@ class HandlerTest {
 
         StepVerifier.create(result)
                 .expectError();
+    }
+
+
+    @Test
+    void listar_debeRetornar200_cuandoExitoso() {
+        when(solicitudRepository.findAll()).thenReturn(Flux.just(domain));
+        when(mapper.toResponse(domain)).thenReturn(response);
+
+        ServerRequest mockRequest = MockServerRequest.builder().build();
+
+        Mono<ServerResponse> result = handler.listar(mockRequest);
+
+        StepVerifier.create(result)
+                .expectNextMatches(serverResponse ->
+                        serverResponse.statusCode().is2xxSuccessful() &&
+                                serverResponse.headers().getContentType().equals(MediaType.APPLICATION_JSON)
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void listar_debeRetornar200_conListaVacia() {
+        when(solicitudRepository.findAll()).thenReturn(Flux.empty());
+
+        ServerRequest mockRequest = MockServerRequest.builder().build();
+
+        Mono<ServerResponse> result = handler.listar(mockRequest);
+
+        StepVerifier.create(result)
+                .expectNextMatches(serverResponse ->
+                        serverResponse.statusCode().is2xxSuccessful()
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void listar_debeRetornar500_cuandoOcurreError() {
+        when(solicitudRepository.findAll()).thenReturn(Flux.error(new RuntimeException("DB error")));
+
+        ServerRequest mockRequest = MockServerRequest.builder().build();
+
+        Mono<ServerResponse> result = handler.listar(mockRequest);
+
+        StepVerifier.create(result)
+                .expectNextMatches(serverResponse ->
+                        serverResponse.statusCode().is5xxServerError() &&
+                                serverResponse.headers().getContentType().equals(MediaType.APPLICATION_JSON)
+                )
+                .verifyComplete();
     }
 }

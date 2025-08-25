@@ -1,6 +1,5 @@
 package co.com.pragma.bootcamp.api;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -12,7 +11,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
-
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +34,7 @@ class RouterRestTest {
         when(handler.registrar(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(Mono.just(Map.of("id", "1")), Map.class)); // Se usa .body()
+                        .body(Mono.just(Map.of("id", "1")), Map.class));
 
         webTestClient.post()
                 .uri(BASE_PATH)
@@ -48,13 +47,35 @@ class RouterRestTest {
     }
 
     @Test
-    void get_debeRetornarNotFound_cuandoNoEstaConfigurado() {
+    void get_debeSerEnrutadoAlHandler() {
+        when(handler.listar(any(ServerRequest.class)))
+                .thenReturn(ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(List.of(Map.of("id", "1"))));
+
         webTestClient.get()
                 .uri(BASE_PATH)
                 .exchange()
-                .expectStatus().isNotFound()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.status").isEqualTo(HttpStatus.NOT_FOUND.value())
-                .jsonPath("$.error").isEqualTo("Not Found");
+                .jsonPath("$[0].id").isEqualTo("1");
+    }
+
+
+    @Test
+    void get_listarTodasSolicitudes_debeRetornarLista() {
+        when(handler.listar(any(ServerRequest.class)))
+                .thenReturn(ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Mono.just(List.of(Map.of("id", "1"))), List.class));
+
+        webTestClient.get()
+                .uri(BASE_PATH)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$[0].id").isEqualTo("1");
     }
 }
