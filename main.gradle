@@ -79,15 +79,6 @@ subprojects {
             csv.setRequired false
             html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
         }
-        afterEvaluate {
-            classDirectories.setFrom(files(classDirectories.files.collect {
-                fileTree(dir: it, exclude: [
-                        '**/MainApplication.class',
-                        '**/config/**/*.class',
-                        '**/mapper/**/*.class'
-                ])
-            }))
-        }
     }
 
 }
@@ -107,6 +98,56 @@ tasks.register('jacocoMergedReport', JacocoReport) {
         xml.setRequired true
         csv.setRequired false
         html.setRequired true
+    }
+}
+
+
+tasks.register('jacocoRootReport', JacocoReport) {
+    group = "Verification"
+    description = "Genera reporte Jacoco unificado para todos los subproyectos"
+
+    dependsOn subprojects.test
+
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+
+    classDirectories.setFrom files(subprojects.collect { sub ->
+        fileTree(dir: "${sub.buildDir}/classes/java/main", exclude: [
+                '**/mapper/**',
+                '**/config/**',
+                '**/exceptions/**',
+                '**/MainApplication.class'
+        ])
+    })
+
+    executionData.setFrom files(subprojects.collect { sub ->
+        file("${sub.buildDir}/jacoco/test.exec")
+    }.findAll { it.exists() })
+
+    reports {
+        xml.required.set(true)
+        xml.outputLocation.set(layout.buildDirectory.file("reports/jacocoMergedReport/jacocoMergedReport.xml"))
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacocoMergedReport/html"))
+    }
+}
+
+tasks.register('jacocoRootCoverageVerification', JacocoCoverageVerification) {
+    group = "Verification"
+    description = "Verifica que la cobertura unificada sea >= 90%"
+
+    dependsOn tasks.named('jacocoRootReport')
+
+    classDirectories.setFrom tasks.named('jacocoRootReport').get().classDirectories
+    sourceDirectories.setFrom tasks.named('jacocoRootReport').get().sourceDirectories
+    executionData.setFrom tasks.named('jacocoRootReport').get().executionData
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.9
+            }
+        }
     }
 }
 
