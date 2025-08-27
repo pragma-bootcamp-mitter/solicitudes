@@ -1,8 +1,8 @@
 package co.com.pragma.bootcamp.api.config;
 
 import co.com.pragma.bootcamp.api.Handler;
-import co.com.pragma.bootcamp.api.dto.SolicitudRequest;
-import co.com.pragma.bootcamp.api.dto.SolicitudResponse;
+import co.com.pragma.bootcamp.api.dto.PeticionSolicitud;
+import co.com.pragma.bootcamp.api.dto.RespuestaSolicitud;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,7 +27,7 @@ public class OpenApiSolicitudConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Solicitud API")
+                        .title("MapeadorSolicitud API")
                         .version("1.0.0")
                         .description("API para gestionar solicitudes de préstamos")
                         .contact(new Contact()
@@ -52,12 +52,12 @@ public class OpenApiSolicitudConfig {
                             tags = {"Solicitudes"},
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(schema = @Schema(implementation = SolicitudRequest.class))
+                                    content = @Content(schema = @Schema(implementation = PeticionSolicitud.class))
                             ),
                             responses = {
-                                    @ApiResponse(responseCode = "201", description = "Solicitud creada",
-                                            content = @Content(schema = @Schema(implementation = SolicitudResponse.class))),
-                                    @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+                                    @ApiResponse(responseCode = "201", description = "MapeadorSolicitud creada",
+                                            content = @Content(schema = @Schema(implementation = RespuestaSolicitud.class))),
+                                    @ApiResponse(responseCode = "400", description = "MapeadorSolicitud inválida"),
                                     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
                             }
                     )
@@ -75,7 +75,7 @@ public class OpenApiSolicitudConfig {
                             tags = {"Solicitudes"},
                             responses = {
                                     @ApiResponse(responseCode = "200", description = "Listado de solicitudes",
-                                            content = @Content(schema = @Schema(implementation = SolicitudResponse.class))),
+                                            content = @Content(schema = @Schema(implementation = RespuestaSolicitud.class))),
                                     @ApiResponse(responseCode = "204", description = "No hay solicitudes registradas"),
                                     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
                             }

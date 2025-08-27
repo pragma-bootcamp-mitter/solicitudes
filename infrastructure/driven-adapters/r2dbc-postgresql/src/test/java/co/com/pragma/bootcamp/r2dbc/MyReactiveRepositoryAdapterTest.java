@@ -1,7 +1,7 @@
 package co.com.pragma.bootcamp.r2dbc;
 
 import co.com.pragma.bootcamp.model.tipoprestamo.TipoPrestamo;
-import co.com.pragma.bootcamp.r2dbc.entity.TipoPrestamoData;
+import co.com.pragma.bootcamp.r2dbc.entidad.EntidadTipoPrestamo;
 import co.com.pragma.bootcamp.r2dbc.mapper.TipoPrestamoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,20 +22,20 @@ import static org.mockito.Mockito.when;
 public class MyReactiveRepositoryAdapterTest {
 
     @Mock
-    private TipoPrestamoDataRepository repository;
+    private RepositorioEntidadTipoPrestamo repository;
 
     @Mock
     private TipoPrestamoMapper mapper;
 
     @InjectMocks
-    private TipoPrestamoRepositoryAdapter adapter;
+    private RepositorioTipoPrestamoAdapter adapter;
 
-    private TipoPrestamoData tipoPrestamoData;
+    private EntidadTipoPrestamo entidadTipoPrestamo;
     private TipoPrestamo tipoPrestamo;
 
     @BeforeEach
     void setUp() {
-        tipoPrestamoData = TipoPrestamoData.builder()
+        entidadTipoPrestamo = EntidadTipoPrestamo.builder()
                 .idTipoPrestamo(1)
                 .nombre("Hipoteca")
                 .montoMinimo(BigDecimal.valueOf(1000000))
@@ -57,8 +57,8 @@ public class MyReactiveRepositoryAdapterTest {
     @Test
     void buscarPorId_debeRetornarTipoPrestamo_cuandoEsEncontrado() {
         when(repository.findById("1"))
-                .thenReturn(Mono.just(tipoPrestamoData));
-        when(mapper.toDomain(tipoPrestamoData))
+                .thenReturn(Mono.just(entidadTipoPrestamo));
+        when(mapper.toDomain(entidadTipoPrestamo))
                 .thenReturn(tipoPrestamo);
 
 
@@ -69,7 +69,7 @@ public class MyReactiveRepositoryAdapterTest {
                 .verifyComplete();
 
         verify(repository).findById("1");
-        verify(mapper).toDomain(tipoPrestamoData);
+        verify(mapper).toDomain(entidadTipoPrestamo);
     }
 
     @Test

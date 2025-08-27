@@ -1,9 +1,9 @@
 package co.com.pragma.bootcamp.api;
 
-import co.com.pragma.bootcamp.api.dto.AuthUserDto;
-import co.com.pragma.bootcamp.api.mapper.AuthUserMapper;
+import co.com.pragma.bootcamp.api.dto.UsuarioAuth;
+import co.com.pragma.bootcamp.api.mapper.MapeadorAuthUsuario;
 import co.com.pragma.bootcamp.api.webclient.AuthClient;
-import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.model.user.Usuario;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,27 +15,27 @@ import reactor.test.StepVerifier;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthRepositoryAdapterTest {
+class AdaptadorRepositorioAuthTest {
 
     @InjectMocks
-    private AuthRepositoryAdapter repositoryAdapter;
+    private AdaptadorRepositorioAuth repositoryAdapter;
 
     @Mock
     private AuthClient client;
 
     @Mock
-    private AuthUserMapper mapper;
+    private MapeadorAuthUsuario mapper;
 
     @Test
     void getUserByDocumento_Existente_DeberiaRetornarUsuario() {
         String documento = "123456";
-        AuthUserDto dto = new AuthUserDto();
+        UsuarioAuth dto = new UsuarioAuth();
         dto.setId("u1");
         dto.setDocumentoIdentidad(documento);
         dto.setNombres("Juan");
         dto.setApellidos("Perez");
 
-        User userDomain = User.builder()
+        Usuario usuarioDomain = Usuario.builder()
                 .id("u1")
                 .documentoIdentidad(documento)
                 .nombres("Juan")
@@ -43,9 +43,9 @@ class AuthRepositoryAdapterTest {
                 .build();
 
         when(client.getUserByDocumento(documento)).thenReturn(Mono.just(dto));
-        when(mapper.toDomain(dto)).thenReturn(userDomain);
+        when(mapper.aDominio(dto)).thenReturn(usuarioDomain);
 
-        Mono<User> result = repositoryAdapter.getUserByDocumento(documento);
+        Mono<Usuario> result = repositoryAdapter.getUserByDocumento(documento);
 
         StepVerifier.create(result)
                 .expectNextMatches(user ->
@@ -62,7 +62,7 @@ class AuthRepositoryAdapterTest {
         String documento = "999999";
         when(client.getUserByDocumento(documento)).thenReturn(Mono.empty());
 
-        Mono<User> result = repositoryAdapter.getUserByDocumento(documento);
+        Mono<Usuario> result = repositoryAdapter.getUserByDocumento(documento);
 
         StepVerifier.create(result)
                 .expectNextCount(0)

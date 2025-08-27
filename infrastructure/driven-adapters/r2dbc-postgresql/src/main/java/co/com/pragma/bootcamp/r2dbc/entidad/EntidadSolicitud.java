@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc.entity;
+package co.com.pragma.bootcamp.r2dbc.entidad;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitudData {
+public class EntidadSolicitud {
 
     @Id
     @Column("id_solicitud")

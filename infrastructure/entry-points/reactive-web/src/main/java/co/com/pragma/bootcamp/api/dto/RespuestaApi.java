@@ -18,4 +18,7 @@ public class RespuestaApi<T> {
         return new RespuestaApi<>(false, mensaje, null);
     }
 
+    public static <T> RespuestaApi<T> error(String mensaje, T datos) {
+        return new RespuestaApi<>(false, mensaje, datos);
+    }
 }

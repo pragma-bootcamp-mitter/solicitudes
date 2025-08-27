@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitudRequest {
+public class PeticionSolicitud {
     @NotBlank(message = "El documento del cliente es obligatorio")
     private String documentoCliente;
 

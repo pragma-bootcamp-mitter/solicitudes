@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc.entity;
+package co.com.pragma.bootcamp.r2dbc.entidad;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Table("tipo_prestamo")
 @NoArgsConstructor
 @AllArgsConstructor
-public class TipoPrestamoData {
+public class EntidadTipoPrestamo {
     @Id
     private Integer idTipoPrestamo;
     private String nombre;

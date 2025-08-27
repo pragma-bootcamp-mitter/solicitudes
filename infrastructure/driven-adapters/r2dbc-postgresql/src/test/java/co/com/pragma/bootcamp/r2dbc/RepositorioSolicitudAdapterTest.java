@@ -3,7 +3,7 @@ package co.com.pragma.bootcamp.r2dbc;
 import co.com.pragma.bootcamp.model.estado.Estado;
 import co.com.pragma.bootcamp.model.solicitud.Solicitud;
 import co.com.pragma.bootcamp.model.tipoprestamo.TipoPrestamo;
-import co.com.pragma.bootcamp.r2dbc.entity.SolicitudData;
+import co.com.pragma.bootcamp.r2dbc.entidad.EntidadSolicitud;
 import co.com.pragma.bootcamp.r2dbc.mapper.SolicitudMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,19 +21,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SolicitudRepositoryAdapterTest {
+class RepositorioSolicitudAdapterTest {
 
     @Mock
-    private SolicitudDataRepository repository;
+    private RepositorioEntidadSolicitud repository;
 
     @Mock
     private SolicitudMapper mapper;
 
     @InjectMocks
-    private SolicitudRepositoryAdapter adapter;
+    private RepositorioSolicitudAdapter adapter;
 
     private Solicitud solicitud;
-    private SolicitudData solicitudData;
+    private EntidadSolicitud entidadSolicitud;
 
     @BeforeEach
     void setup() {
@@ -47,7 +47,7 @@ class SolicitudRepositoryAdapterTest {
                 .tipoPrestamo(TipoPrestamo.builder().id(1).nombre("Hipoteca").build())
                 .build();
 
-        solicitudData = new SolicitudData(
+        entidadSolicitud = new EntidadSolicitud(
                 "1",
                 "123456789",
                 BigDecimal.valueOf(1000000),
@@ -66,7 +66,7 @@ class SolicitudRepositoryAdapterTest {
                 .documentoCliente("123456789")
                 .monto(BigDecimal.valueOf(2000000))
                 .build();
-        SolicitudData solicitudData2 = new SolicitudData(
+        EntidadSolicitud entidadSolicitud2 = new EntidadSolicitud(
                 "2",
                 "123456789",
                 BigDecimal.valueOf(2000000),
@@ -76,9 +76,9 @@ class SolicitudRepositoryAdapterTest {
                 2);
 
         when(repository.findByDocumentoCliente("123456789"))
-                .thenReturn(Flux.just(solicitudData, solicitudData2));
-        when(mapper.toDomain(solicitudData)).thenReturn(solicitud);
-        when(mapper.toDomain(solicitudData2)).thenReturn(solicitud2);
+                .thenReturn(Flux.just(entidadSolicitud, entidadSolicitud2));
+        when(mapper.toDomain(entidadSolicitud)).thenReturn(solicitud);
+        when(mapper.toDomain(entidadSolicitud2)).thenReturn(solicitud2);
 
         // Act
         Flux<Solicitud> resultado = adapter.findByDocumentoCliente("123456789");
@@ -89,7 +89,7 @@ class SolicitudRepositoryAdapterTest {
                 .verifyComplete();
 
         verify(repository).findByDocumentoCliente("123456789");
-        verify(mapper, times(2)).toDomain(any(SolicitudData.class));
+        verify(mapper, times(2)).toDomain(any(EntidadSolicitud.class));
     }
 
     @Test
@@ -107,16 +107,16 @@ class SolicitudRepositoryAdapterTest {
                 .verifyComplete();
 
         verify(repository).findByDocumentoCliente("987654321");
-        verify(mapper, times(0)).toDomain(any(SolicitudData.class));
+        verify(mapper, times(0)).toDomain(any(EntidadSolicitud.class));
     }
 
     @Test
     void toData_debeMapearCorrectamente() {
         // Arrange
-        when(mapper.toData(solicitud)).thenReturn(solicitudData);
+        when(mapper.toData(solicitud)).thenReturn(entidadSolicitud);
 
         // Act
-        SolicitudData resultado = adapter.toData(solicitud);
+        EntidadSolicitud resultado = adapter.toData(solicitud);
 
         // Assert
         verify(mapper).toData(solicitud);
@@ -125,12 +125,12 @@ class SolicitudRepositoryAdapterTest {
     @Test
     void toEntity_debeMapearCorrectamente() {
         // Arrange
-        when(mapper.toDomain(solicitudData)).thenReturn(solicitud);
+        when(mapper.toDomain(entidadSolicitud)).thenReturn(solicitud);
 
         // Act
-        Solicitud resultado = adapter.toEntity(solicitudData);
+        Solicitud resultado = adapter.toEntity(entidadSolicitud);
 
         // Assert
-        verify(mapper).toDomain(solicitudData);
+        verify(mapper).toDomain(entidadSolicitud);
     }
 }

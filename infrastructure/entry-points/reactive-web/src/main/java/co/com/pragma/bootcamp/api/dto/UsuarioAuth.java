@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthUserDto {
+public class UsuarioAuth {
     private String id;
     private String documentoIdentidad;
     private String nombres;

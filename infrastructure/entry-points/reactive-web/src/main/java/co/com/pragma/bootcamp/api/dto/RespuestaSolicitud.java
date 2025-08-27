@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitudResponse {
+public class RespuestaSolicitud {
     private String id;
     private String documentoCliente;
     private BigDecimal monto;

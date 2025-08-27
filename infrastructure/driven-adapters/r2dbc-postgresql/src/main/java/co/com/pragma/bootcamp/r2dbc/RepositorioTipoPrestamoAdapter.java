@@ -1,18 +1,18 @@
 package co.com.pragma.bootcamp.r2dbc;
 
 import co.com.pragma.bootcamp.model.tipoprestamo.TipoPrestamo;
-import co.com.pragma.bootcamp.model.tipoprestamo.gateways.TipoPrestamoRepository;
+import co.com.pragma.bootcamp.model.tipoprestamo.gateways.RepositorioTipoPrestamo;
 import co.com.pragma.bootcamp.r2dbc.mapper.TipoPrestamoMapper;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public class TipoPrestamoRepositoryAdapter implements TipoPrestamoRepository {
+public class RepositorioTipoPrestamoAdapter implements RepositorioTipoPrestamo {
 
-    private final TipoPrestamoDataRepository repository;
+    private final RepositorioEntidadTipoPrestamo repository;
     private final TipoPrestamoMapper mapper;
 
-    public TipoPrestamoRepositoryAdapter(TipoPrestamoDataRepository repository, TipoPrestamoMapper mapper) {
+    public RepositorioTipoPrestamoAdapter(RepositorioEntidadTipoPrestamo repository, TipoPrestamoMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }

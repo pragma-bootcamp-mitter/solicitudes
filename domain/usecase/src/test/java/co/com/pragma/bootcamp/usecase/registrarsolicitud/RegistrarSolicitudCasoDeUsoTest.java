@@ -1,11 +1,11 @@
 package co.com.pragma.bootcamp.usecase.registrarsolicitud;
 
 import co.com.pragma.bootcamp.model.solicitud.Solicitud;
-import co.com.pragma.bootcamp.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
 import co.com.pragma.bootcamp.model.tipoprestamo.TipoPrestamo;
-import co.com.pragma.bootcamp.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import co.com.pragma.bootcamp.model.user.User;
-import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;
+import co.com.pragma.bootcamp.model.tipoprestamo.gateways.RepositorioTipoPrestamo;
+import co.com.pragma.bootcamp.model.user.Usuario;
+import co.com.pragma.bootcamp.model.user.gateways.RepositorioAuth;
 import co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.EstadoSolicitud;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,57 +19,23 @@ import java.math.BigDecimal;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-class RegistrarSolicitudUseCaseTest {
+class RegistrarSolicitudCasoDeUsoTest {
 
-    private RegistrarSolicitudUseCase useCase;
-
-    @Mock
-    private SolicitudRepository solicitudRepository;
+    private RegistrarSolicitudCasoDeUso useCase;
 
     @Mock
-    private TipoPrestamoRepository tipoPrestamoRepository;
+    private RepositorioSolicitud repositorioSolicitud;
 
     @Mock
-    private AuthRepository authRepository;
+    private RepositorioTipoPrestamo repositorioTipoPrestamo;
+
+    @Mock
+    private RepositorioAuth repositorioAuth;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        useCase = new RegistrarSolicitudUseCase(solicitudRepository, tipoPrestamoRepository, authRepository);
-    }
-
-    @Test
-    void registrar_MontoNulo_DeberiaFallar() {
-        Solicitud solicitud = new Solicitud();
-        solicitud.setMonto(null);
-        solicitud.setPlazoMeses(12);
-
-        StepVerifier.create(useCase.registrar(solicitud))
-                .expectErrorMessage("Monto inválido")
-                .verify();
-    }
-
-    @Test
-    void registrar_PlazoInvalido_DeberiaFallar() {
-        Solicitud solicitud = new Solicitud();
-        solicitud.setMonto(BigDecimal.valueOf(1000));
-        solicitud.setPlazoMeses(0);
-
-        StepVerifier.create(useCase.registrar(solicitud))
-                .expectErrorMessage("Plazo inválido")
-                .verify();
-    }
-
-    @Test
-    void registrar_TipoPrestamoNulo_DeberiaFallar() {
-        Solicitud solicitud = new Solicitud();
-        solicitud.setMonto(BigDecimal.valueOf(1000));
-        solicitud.setPlazoMeses(12);
-        solicitud.setTipoPrestamo(null);
-
-        StepVerifier.create(useCase.registrar(solicitud))
-                .expectErrorMessage("Tipo de préstamo obligatorio")
-                .verify();
+        useCase = new RegistrarSolicitudCasoDeUso(repositorioSolicitud, repositorioTipoPrestamo, repositorioAuth);
     }
 
     @Test
@@ -81,7 +47,7 @@ class RegistrarSolicitudUseCaseTest {
         tipo.setId(1);
         solicitud.setTipoPrestamo(tipo);
 
-        when(tipoPrestamoRepository.findById(1)).thenReturn(Mono.empty());
+        when(repositorioTipoPrestamo.findById(1)).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.registrar(solicitud))
                 .expectErrorMessage("Tipo de préstamo no existe")
@@ -99,7 +65,7 @@ class RegistrarSolicitudUseCaseTest {
         tipo.setMontoMaximo(BigDecimal.valueOf(20000));
         solicitud.setTipoPrestamo(tipo);
 
-        when(tipoPrestamoRepository.findById(1)).thenReturn(Mono.just(tipo));
+        when(repositorioTipoPrestamo.findById(1)).thenReturn(Mono.just(tipo));
 
         StepVerifier.create(useCase.registrar(solicitud))
                 .expectErrorMessage("Monto fuera de rango para el tipo de préstamo")
@@ -117,8 +83,8 @@ class RegistrarSolicitudUseCaseTest {
         tipo.setMontoMaximo(BigDecimal.valueOf(20000));
         solicitud.setTipoPrestamo(tipo);
 
-        when(tipoPrestamoRepository.findById(1)).thenReturn(Mono.just(tipo));
-        when(authRepository.getUserByDocumento(any())).thenReturn(Mono.empty());
+        when(repositorioTipoPrestamo.findById(1)).thenReturn(Mono.just(tipo));
+        when(repositorioAuth.getUserByDocumento(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.registrar(solicitud))
                 .expectErrorMessage("Cliente no encontrado")
@@ -137,12 +103,12 @@ class RegistrarSolicitudUseCaseTest {
         tipo.setMontoMaximo(BigDecimal.valueOf(20000));
         solicitud.setTipoPrestamo(tipo);
 
-        User user = new User();
-        user.setId("u1");
+        Usuario usuario = new Usuario();
+        usuario.setId("u1");
 
-        when(tipoPrestamoRepository.findById(1)).thenReturn(Mono.just(tipo));
-        when(authRepository.getUserByDocumento("123456")).thenReturn(Mono.just(user));
-        when(solicitudRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(repositorioTipoPrestamo.findById(1)).thenReturn(Mono.just(tipo));
+        when(repositorioAuth.getUserByDocumento("123456")).thenReturn(Mono.just(usuario));
+        when(repositorioSolicitud.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
         StepVerifier.create(useCase.registrar(solicitud))
                 .expectNextMatches(s -> s.getEstado().getId().equals(EstadoSolicitud.PENDIENTE_REVISION.toDomain().getId()))

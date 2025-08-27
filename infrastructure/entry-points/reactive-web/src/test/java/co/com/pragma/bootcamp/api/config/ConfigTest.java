@@ -2,12 +2,12 @@ package co.com.pragma.bootcamp.api.config;
 
 import co.com.pragma.bootcamp.api.Handler;
 import co.com.pragma.bootcamp.api.RouterRest;
-import co.com.pragma.bootcamp.api.dto.SolicitudRequest;
-import co.com.pragma.bootcamp.api.dto.SolicitudResponse;
-import co.com.pragma.bootcamp.api.mapper.SolicitudDtoMapper;
+import co.com.pragma.bootcamp.api.dto.PeticionSolicitud;
+import co.com.pragma.bootcamp.api.dto.RespuestaSolicitud;
+import co.com.pragma.bootcamp.api.mapper.MapeadorSolicitud;
 import co.com.pragma.bootcamp.model.solicitud.Solicitud;
-import co.com.pragma.bootcamp.model.solicitud.gateways.SolicitudRepository;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
+import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
+import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudCasoDeUso;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -34,22 +34,22 @@ class ConfigTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private RegistrarSolicitudUseCase useCase;
+    private RegistrarSolicitudCasoDeUso useCase;
 
     @MockitoBean
-    private SolicitudDtoMapper mapper;
+    private MapeadorSolicitud mapper;
 
     @MockitoBean
     private Handler handler;
 
     @MockitoBean
-    private SolicitudRepository solicitudRepository;
+    private RepositorioSolicitud repositorioSolicitud;
 
     private static final String BASE_PATH = "/api/v1/solicitud";
 
     @Test
     void post_debeRegistrarSolicitud_yRetornar201() {
-        SolicitudResponse responseEsperada = SolicitudResponse.builder()
+        RespuestaSolicitud responseEsperada = RespuestaSolicitud.builder()
                 .id("1")
                 .build();
 
@@ -62,10 +62,10 @@ class ConfigTest {
         webTestClient.post()
                 .uri(BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new SolicitudRequest("123456789", BigDecimal.valueOf(1000000),
+                .bodyValue(new PeticionSolicitud("123456789", BigDecimal.valueOf(1000000),
                         12, "test@example.com",
-                        new SolicitudRequest.EstadoRequest(),
-                        new SolicitudRequest.TipoPrestamoRequest()))
+                        new PeticionSolicitud.EstadoRequest(),
+                        new PeticionSolicitud.TipoPrestamoRequest()))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -75,16 +75,16 @@ class ConfigTest {
 
     //@Test
     void post_debeRetornarBadRequest_cuandoElUseCaseFalla() {
-        SolicitudRequest requestBody = new SolicitudRequest(
+        PeticionSolicitud requestBody = new PeticionSolicitud(
                 "123456789",
                 BigDecimal.valueOf(1000000),
                 12,
                 "test@example.com",
-                new SolicitudRequest.EstadoRequest(),
-                new SolicitudRequest.TipoPrestamoRequest()
+                new PeticionSolicitud.EstadoRequest(),
+                new PeticionSolicitud.TipoPrestamoRequest()
         );
 
-        when(mapper.toDomain(any(SolicitudRequest.class)))
+        when(mapper.aDominio(any(PeticionSolicitud.class)))
                 .thenReturn(Solicitud.builder()
                         .documentoCliente("123456789")
                         .monto(BigDecimal.valueOf(1000000))
@@ -106,7 +106,7 @@ class ConfigTest {
 
     //@Test
     void losEncabezadosDeSeguridad_debenEstarConfiguradosCorrectamente() {
-        when(solicitudRepository.findAll()).thenReturn(Flux.empty());
+        when(repositorioSolicitud.findAll()).thenReturn(Flux.empty());
 
         webTestClient.get()
                 .uri(BASE_PATH)

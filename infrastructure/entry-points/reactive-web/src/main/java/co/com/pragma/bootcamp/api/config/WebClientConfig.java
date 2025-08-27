@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api.webclient;
+package co.com.pragma.bootcamp.api.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -1,19 +1,15 @@
 package co.com.pragma.bootcamp.config;
 
-import co.com.pragma.bootcamp.model.solicitud.Solicitud;
-import co.com.pragma.bootcamp.model.solicitud.gateways.SolicitudRepository;
-import co.com.pragma.bootcamp.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
+import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
+import co.com.pragma.bootcamp.model.tipoprestamo.gateways.RepositorioTipoPrestamo;
+import co.com.pragma.bootcamp.model.user.gateways.RepositorioAuth;
+import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudCasoDeUso;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import reactor.core.publisher.Mono;
-
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,7 +22,7 @@ public class UseCasesConfigTest {
 
             boolean useCaseBeanFound = false;
             for (String beanName : beanNames) {
-                if (beanName.endsWith("UseCase")) {
+                if (beanName.endsWith("CasoDeUso")) {
                     useCaseBeanFound = true;
                     break;
                 }
@@ -41,34 +37,32 @@ public class UseCasesConfigTest {
     static class TestConfig {
 
         @Mock
-        private SolicitudRepository solicitudRepository;
+        private RepositorioSolicitud repositorioSolicitud;
 
         @Mock
-        private TipoPrestamoRepository tipoPrestamoRepository;
+        private RepositorioTipoPrestamo repositorioTipoPrestamo;
 
         @Mock
-        private AuthRepository authRepository;
+        private RepositorioAuth repositorioAuth;
 
         @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
+        public MiCasoDeUso miCasoDeUso() {
+            return new MiCasoDeUso();
         }
 
         @Bean
-        public RegistrarSolicitudUseCase registrarSolicitudUseCase() {
-            return new RegistrarSolicitudUseCase(
-                    solicitudRepository,
-                    tipoPrestamoRepository,
-                    authRepository
+        public RegistrarSolicitudCasoDeUso registrarSolicitudCasoDeUso() {
+            return new RegistrarSolicitudCasoDeUso(
+                    repositorioSolicitud,
+                    repositorioTipoPrestamo,
+                    repositorioAuth
             );
         }
-
-
     }
 
-    static class MyUseCase {
+    static class MiCasoDeUso {
         public String execute() {
-            return "MyUseCase Test";
+            return "MiCasoDeUso Test";
         }
     }
 }

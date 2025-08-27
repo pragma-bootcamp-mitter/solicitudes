@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc.entity;
+package co.com.pragma.bootcamp.r2dbc.entidad;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("estados")
 @NoArgsConstructor
 @AllArgsConstructor
-public class EstadoData {
+public class EntidadEstado {
     @Id
     private Integer idEstado;
     private String nombre;
