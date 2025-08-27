@@ -1,11 +1,11 @@
 package co.com.pragma.bootcamp.api;
 
-import co.com.pragma.bootcamp.api.dto.PeticionSolicitud;
-import co.com.pragma.bootcamp.api.dto.RespuestaApi;
-import co.com.pragma.bootcamp.api.mapper.MapeadorSolicitud;
+import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
+import co.com.pragma.bootcamp.api.dto.ApiResponse;
+import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
-import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudCasoDeUso;
+import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
+import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
 import jakarta.validation.ConstraintViolation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,65 +25,65 @@ import java.util.stream.Collectors;
 @Slf4j
 public class Handler {
 
-    private final RegistrarSolicitudCasoDeUso useCase;
-    private final RepositorioSolicitud repositorioSolicitud;
-    private final MapeadorSolicitud mapper;
+    private final RegisterApplicationUseCase useCase;
+    private final ApplicationRepository applicationRepository;
+    private final ApplicationMapper mapper;
     private final Validator validator;
 
-    public Mono<ServerResponse> registrar(ServerRequest request) {
-        return request.bodyToMono(PeticionSolicitud.class)
-                .doOnNext(req -> log.info("PeticionSolicitud recibida: {}", req))
-                .flatMap(solicitud -> {
-                    Set<ConstraintViolation<PeticionSolicitud>> violations = validator.validate(solicitud);
+    public Mono<ServerResponse> register(ServerRequest request) {
+        return request.bodyToMono(ApplicationRequest.class)
+                .doOnNext(req -> log.info("Received ApplicationRequest: {}", req))
+                .flatMap(applicationRequest -> {
+                    Set<ConstraintViolation<ApplicationRequest>> violations = validator.validate(applicationRequest);
                     if (!violations.isEmpty()) {
-                        Map<String, String> errores = violations.stream()
+                        Map<String, String> errors = violations.stream()
                                 .collect(Collectors.toMap(
                                         v -> v.getPropertyPath().toString(),
                                         ConstraintViolation::getMessage
                                 ));
-                        log.warn("Errores de validación en solicitud: {}", errores);
+                        log.warn("Validation errors in request: {}", errors);
                         return ServerResponse.badRequest()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(RespuestaApi.error("Error de validación", errores));
+                                .bodyValue(ApiResponse.error("Validation Error", errors));
                     }
 
-                    return useCase.registrar(mapper.aDominio(solicitud))
-                            .doOnNext(saved -> log.info("Solicitud registrada en dominio: {}", saved))
-                            .map(mapper::aRepuesta)
+                    return useCase.register(mapper.toDomain(applicationRequest))
+                            .doOnNext(saved -> log.info("Application registered in domain: {}", saved))
+                            .map(mapper::toResponse)
                             .flatMap(response ->
                                     ServerResponse.status(HttpStatus.CREATED)
                                             .contentType(MediaType.APPLICATION_JSON)
-                                            .bodyValue(RespuestaApi.ok("Solicitud creada exitosamente", response))
+                                            .bodyValue(ApiResponse.ok("Application created successfully", response))
                             );
                 })
                 .onErrorResume(BusinessException.class, e -> {
-                    log.error("Error de negocio al registrar solicitud: {}", e.getMessage());
+                    log.error("Business error when registering application: {}", e.getMessage());
                     return ServerResponse.status(HttpStatus.CONFLICT)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(RespuestaApi.error(e.getMessage()));
+                            .bodyValue(ApiResponse.error(e.getMessage()));
                 })
                 .onErrorResume(e -> {
-                    log.error("Error inesperado al registrar solicitud: {}", e.getMessage(), e);
+                    log.error("Unexpected error when registering application: {}", e.getMessage(), e);
                     return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(RespuestaApi.error("Error interno del servidor"));
+                            .bodyValue(ApiResponse.error("Internal Server Error"));
                 });
     }
 
-    public Mono<ServerResponse> listar(ServerRequest request) {
-        return repositorioSolicitud.findAll()
-                .map(mapper::aRepuesta)
+    public Mono<ServerResponse> list(ServerRequest request) {
+        return applicationRepository.findAll()
+                .map(mapper::toResponse)
                 .collectList()
                 .flatMap(list ->
                         ServerResponse.ok()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(RespuestaApi.ok("Listado de solicitudes", list))
+                                .bodyValue(ApiResponse.ok("List of applications", list))
                 )
                 .onErrorResume(e -> {
-                    log.error("Error al listar solicitudes: {}", e.getMessage(), e);
+                    log.error("Error listing applications: {}", e.getMessage(), e);
                     return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(RespuestaApi.error("Error interno al listar solicitudes"));
+                            .bodyValue(ApiResponse.error("Internal server error when listing applications"));
                 });
     }
 

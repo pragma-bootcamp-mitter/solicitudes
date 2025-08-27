@@ -1,0 +1,11 @@
+package co.com.pragma.bootcamp.r2dbc.mapper;
+
+
+import co.com.pragma.bootcamp.model.loantype.LoanType;
+import co.com.pragma.bootcamp.r2dbc.entity.LoanTypeEntity;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface LoanTypeMapper {
+    LoanType toDomain(LoanTypeEntity entity);
+}

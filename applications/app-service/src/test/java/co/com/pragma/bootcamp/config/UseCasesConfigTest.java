@@ -1,9 +1,9 @@
 package co.com.pragma.bootcamp.config;
 
-import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
-import co.com.pragma.bootcamp.model.tipoprestamo.gateways.RepositorioTipoPrestamo;
-import co.com.pragma.bootcamp.model.user.gateways.RepositorioAuth;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudCasoDeUso;
+import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
+import co.com.pragma.bootcamp.model.loantype.gateways.LoanTypeRepository;
+import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;
+import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -22,7 +22,7 @@ public class UseCasesConfigTest {
 
             boolean useCaseBeanFound = false;
             for (String beanName : beanNames) {
-                if (beanName.endsWith("CasoDeUso")) {
+                if (beanName.endsWith("UseCase")) {
                     useCaseBeanFound = true;
                     break;
                 }
@@ -37,32 +37,32 @@ public class UseCasesConfigTest {
     static class TestConfig {
 
         @Mock
-        private RepositorioSolicitud repositorioSolicitud;
+        private ApplicationRepository applicationRepository;
 
         @Mock
-        private RepositorioTipoPrestamo repositorioTipoPrestamo;
+        private LoanTypeRepository loanTypeRepository;
 
         @Mock
-        private RepositorioAuth repositorioAuth;
+        private AuthRepository authRepository;
 
         @Bean
-        public MiCasoDeUso miCasoDeUso() {
-            return new MiCasoDeUso();
+        public MyUseCase myUseCase() {
+            return new MyUseCase();
         }
 
         @Bean
-        public RegistrarSolicitudCasoDeUso registrarSolicitudCasoDeUso() {
-            return new RegistrarSolicitudCasoDeUso(
-                    repositorioSolicitud,
-                    repositorioTipoPrestamo,
-                    repositorioAuth
+        public RegisterApplicationUseCase registerApplicationUseCase() {
+            return new RegisterApplicationUseCase(
+                    applicationRepository,
+                    loanTypeRepository,
+                    authRepository
             );
         }
     }
 
-    static class MiCasoDeUso {
+    static class MyUseCase {
         public String execute() {
-            return "MiCasoDeUso Test";
+            return "MyUseCase Test";
         }
     }
 }

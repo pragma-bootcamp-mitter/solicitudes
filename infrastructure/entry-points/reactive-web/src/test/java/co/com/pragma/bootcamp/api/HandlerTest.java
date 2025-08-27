@@ -1,12 +1,12 @@
 package co.com.pragma.bootcamp.api;
 
-import co.com.pragma.bootcamp.api.dto.PeticionSolicitud;
-import co.com.pragma.bootcamp.api.dto.RespuestaSolicitud;
-import co.com.pragma.bootcamp.api.mapper.MapeadorSolicitud;
+import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
+import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
+import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
-import co.com.pragma.bootcamp.model.solicitud.Solicitud;
-import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudCasoDeUso;
+import co.com.pragma.bootcamp.model.application.Application;
+import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
+import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,13 +31,13 @@ import static org.mockito.Mockito.when;
 class HandlerTest {
 
     @Mock
-    private RegistrarSolicitudCasoDeUso useCase;
+    private RegisterApplicationUseCase useCase;
 
     @Mock
-    private MapeadorSolicitud mapper;
+    private ApplicationMapper mapper;
 
     @Mock
-    private RepositorioSolicitud repositorioSolicitud;
+    private ApplicationRepository applicationRepository;
 
     @Mock
     private Validator validator;
@@ -45,39 +45,39 @@ class HandlerTest {
     @InjectMocks
     private Handler handler;
 
-    private PeticionSolicitud request;
-    private Solicitud domain;
-    private Solicitud saved;
-    private RespuestaSolicitud response;
+    private ApplicationRequest request;
+    private Application domain;
+    private Application saved;
+    private ApplicationResponse response;
 
     @BeforeEach
     void setUp() {
-        request = new PeticionSolicitud(
+        request = new ApplicationRequest(
                 "123456789",
                 BigDecimal.valueOf(1000000),
                 12,
                 "test@example.com",
-                new PeticionSolicitud.EstadoRequest(),
-                new PeticionSolicitud.TipoPrestamoRequest()
+                new ApplicationRequest.StateRequest(),
+                new ApplicationRequest.LoanTypeRequest()
         );
-        request.getEstado().setId(1);
-        request.getTipoPrestamo().setId(1);
+        request.getState().setId(1);
+        request.getLoanType().setId(1);
 
-        domain = Solicitud.builder().id("id-domain").build();
-        saved = Solicitud.builder().id("id-saved").build();
-        response = RespuestaSolicitud.builder().id("id-response").build();
+        domain = Application.builder().id("id-domain").build();
+        saved = Application.builder().id("id-saved").build();
+        response = ApplicationResponse.builder().id("id-response").build();
     }
 
     @Test
-    void registrar_debeRetornar201_cuandoEsExitoso() {
-        when(mapper.aDominio(any(PeticionSolicitud.class))).thenReturn(domain);
-        when(useCase.registrar(any(Solicitud.class))).thenReturn(Mono.just(saved));
-        when(mapper.aRepuesta(any(Solicitud.class))).thenReturn(response);
+    void register_debeRetornar201_cuandoEsExitoso() {
+        when(mapper.toDomain(any(ApplicationRequest.class))).thenReturn(domain);
+        when(useCase.register(any(Application.class))).thenReturn(Mono.just(saved));
+        when(mapper.toResponse(any(Application.class))).thenReturn(response);
 
         ServerRequest mockRequest = MockServerRequest.builder()
                 .body(Mono.just(request));
 
-        Mono<ServerResponse> result = handler.registrar(mockRequest);
+        Mono<ServerResponse> result = handler.register(mockRequest);
 
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
@@ -88,15 +88,15 @@ class HandlerTest {
     }
 
     @Test
-    void registrar_debeRetornar409_cuandoElUseCaseLanzaBusinessException() {
-        when(mapper.aDominio(any(PeticionSolicitud.class))).thenReturn(domain);
-        when(useCase.registrar(any(Solicitud.class)))
+    void register_debeRetornar409_cuandoElUseCaseLanzaBusinessException() {
+        when(mapper.toDomain(any(ApplicationRequest.class))).thenReturn(domain);
+        when(useCase.register(any(Application.class)))
                 .thenReturn(Mono.error(new BusinessException("Solicitud duplicada")));
 
         ServerRequest mockRequest = MockServerRequest.builder()
                 .body(Mono.just(request));
 
-        Mono<ServerResponse> result = handler.registrar(mockRequest);
+        Mono<ServerResponse> result = handler.register(mockRequest);
 
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
@@ -107,14 +107,14 @@ class HandlerTest {
     }
 
     @Test
-    void registrar_debeRetornar500_cuandoElMapeoFalla() {
-        when(mapper.aDominio(any(PeticionSolicitud.class)))
+    void register_debeRetornar500_cuandoElMapeoFalla() {
+        when(mapper.toDomain(any(ApplicationRequest.class)))
                 .thenThrow(new RuntimeException("Error de mapeo"));
 
         ServerRequest mockRequest = MockServerRequest.builder()
                 .body(Mono.just(request));
 
-        Mono<ServerResponse> result = handler.registrar(mockRequest);
+        Mono<ServerResponse> result = handler.register(mockRequest);
 
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
@@ -125,10 +125,10 @@ class HandlerTest {
     }
 
     @Test
-    void registrar_debeRetornar400_cuandoElBodyEsVacio() {
+    void register_debeRetornar400_cuandoElBodyEsVacio() {
         ServerRequest mockRequest = MockServerRequest.builder().body(Mono.empty());
 
-        Mono<ServerResponse> result = handler.registrar(mockRequest);
+        Mono<ServerResponse> result = handler.register(mockRequest);
 
         StepVerifier.create(result)
                 .expectError();
@@ -136,13 +136,13 @@ class HandlerTest {
 
 
     @Test
-    void listar_debeRetornar200_cuandoExitoso() {
-        when(repositorioSolicitud.findAll()).thenReturn(Flux.just(domain));
-        when(mapper.aRepuesta(domain)).thenReturn(response);
+    void list_debeRetornar200_cuandoExitoso() {
+        when(applicationRepository.findAll()).thenReturn(Flux.just(domain));
+        when(mapper.toResponse(domain)).thenReturn(response);
 
         ServerRequest mockRequest = MockServerRequest.builder().build();
 
-        Mono<ServerResponse> result = handler.listar(mockRequest);
+        Mono<ServerResponse> result = handler.list(mockRequest);
 
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
@@ -153,12 +153,12 @@ class HandlerTest {
     }
 
     @Test
-    void listar_debeRetornar200_conListaVacia() {
-        when(repositorioSolicitud.findAll()).thenReturn(Flux.empty());
+    void list_debeRetornar200_conListaVacia() {
+        when(applicationRepository.findAll()).thenReturn(Flux.empty());
 
         ServerRequest mockRequest = MockServerRequest.builder().build();
 
-        Mono<ServerResponse> result = handler.listar(mockRequest);
+        Mono<ServerResponse> result = handler.list(mockRequest);
 
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->
@@ -168,12 +168,12 @@ class HandlerTest {
     }
 
     @Test
-    void listar_debeRetornar500_cuandoOcurreError() {
-        when(repositorioSolicitud.findAll()).thenReturn(Flux.error(new RuntimeException("DB error")));
+    void list_debeRetornar500_cuandoOcurreError() {
+        when(applicationRepository.findAll()).thenReturn(Flux.error(new RuntimeException("DB error")));
 
         ServerRequest mockRequest = MockServerRequest.builder().build();
 
-        Mono<ServerResponse> result = handler.listar(mockRequest);
+        Mono<ServerResponse> result = handler.list(mockRequest);
 
         StepVerifier.create(result)
                 .expectNextMatches(serverResponse ->

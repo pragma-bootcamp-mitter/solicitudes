@@ -1,8 +1,8 @@
 package co.com.pragma.bootcamp.api.config;
 
 import co.com.pragma.bootcamp.api.Handler;
-import co.com.pragma.bootcamp.api.dto.PeticionSolicitud;
-import co.com.pragma.bootcamp.api.dto.RespuestaSolicitud;
+import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
+import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,7 +27,7 @@ public class OpenApiSolicitudConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("MapeadorSolicitud API")
+                        .title("ApplicationMapper API")
                         .version("1.0.0")
                         .description("API para gestionar solicitudes de préstamos")
                         .contact(new Contact()
@@ -44,7 +44,7 @@ public class OpenApiSolicitudConfig {
                     produces = {"application/json"},
                     method = RequestMethod.POST,
                     beanClass = Handler.class,
-                    beanMethod = "registrar",
+                    beanMethod = "register",
                     operation = @Operation(
                             operationId = "registrarSolicitud",
                             summary = "Registrar una nueva solicitud",
@@ -52,12 +52,12 @@ public class OpenApiSolicitudConfig {
                             tags = {"Solicitudes"},
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(schema = @Schema(implementation = PeticionSolicitud.class))
+                                    content = @Content(schema = @Schema(implementation = ApplicationRequest.class))
                             ),
                             responses = {
-                                    @ApiResponse(responseCode = "201", description = "MapeadorSolicitud creada",
-                                            content = @Content(schema = @Schema(implementation = RespuestaSolicitud.class))),
-                                    @ApiResponse(responseCode = "400", description = "MapeadorSolicitud inválida"),
+                                    @ApiResponse(responseCode = "201", description = "ApplicationMapper creada",
+                                            content = @Content(schema = @Schema(implementation = ApplicationResponse.class))),
+                                    @ApiResponse(responseCode = "400", description = "ApplicationMapper inválida"),
                                     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
                             }
                     )
@@ -67,7 +67,7 @@ public class OpenApiSolicitudConfig {
                     produces = {"application/json"},
                     method = RequestMethod.GET,
                     beanClass = Handler.class,
-                    beanMethod = "listar",
+                    beanMethod = "list",
                     operation = @Operation(
                             operationId = "listarSolicitudes",
                             summary = "Listar todas las solicitudes",
@@ -75,7 +75,7 @@ public class OpenApiSolicitudConfig {
                             tags = {"Solicitudes"},
                             responses = {
                                     @ApiResponse(responseCode = "200", description = "Listado de solicitudes",
-                                            content = @Content(schema = @Schema(implementation = RespuestaSolicitud.class))),
+                                            content = @Content(schema = @Schema(implementation = ApplicationResponse.class))),
                                     @ApiResponse(responseCode = "204", description = "No hay solicitudes registradas"),
                                     @ApiResponse(responseCode = "500", description = "Error interno del servidor")
                             }
@@ -84,8 +84,8 @@ public class OpenApiSolicitudConfig {
     })
     public RouterFunction<ServerResponse> router(Handler handler) {
         return RouterFunctions.route()
-                .POST("/api/v1/solicitud", handler::registrar)
-                .GET("/api/v1/solicitud", handler::listar)
+                .POST("/api/v1/solicitud", handler::register)
+                .GET("/api/v1/solicitud", handler::list)
                 .build();
     }
 }

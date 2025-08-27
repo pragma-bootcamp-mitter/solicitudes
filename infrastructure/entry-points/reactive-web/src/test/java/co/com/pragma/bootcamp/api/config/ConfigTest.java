@@ -2,12 +2,12 @@ package co.com.pragma.bootcamp.api.config;
 
 import co.com.pragma.bootcamp.api.Handler;
 import co.com.pragma.bootcamp.api.RouterRest;
-import co.com.pragma.bootcamp.api.dto.PeticionSolicitud;
-import co.com.pragma.bootcamp.api.dto.RespuestaSolicitud;
-import co.com.pragma.bootcamp.api.mapper.MapeadorSolicitud;
-import co.com.pragma.bootcamp.model.solicitud.Solicitud;
-import co.com.pragma.bootcamp.model.solicitud.gateways.RepositorioSolicitud;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegistrarSolicitudCasoDeUso;
+import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
+import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
+import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
+import co.com.pragma.bootcamp.model.application.Application;
+import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
+import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import org.springframework.http.MediaType;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -34,26 +35,26 @@ class ConfigTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private RegistrarSolicitudCasoDeUso useCase;
+    private RegisterApplicationUseCase useCase;
 
     @MockitoBean
-    private MapeadorSolicitud mapper;
+    private ApplicationMapper mapper;
 
     @MockitoBean
     private Handler handler;
 
     @MockitoBean
-    private RepositorioSolicitud repositorioSolicitud;
+    private ApplicationRepository applicationRepository;
 
-    private static final String BASE_PATH = "/api/v1/solicitud";
+    private static final String BASE_PATH = "/api/v1/applications";
 
     @Test
-    void post_debeRegistrarSolicitud_yRetornar201() {
-        RespuestaSolicitud responseEsperada = RespuestaSolicitud.builder()
+    void post_shouldRegisterApplication_andReturn201() {
+        ApplicationResponse responseEsperada = ApplicationResponse.builder()
                 .id("1")
                 .build();
 
-        when(handler.registrar(any())).thenReturn(
+        when(handler.register(any())).thenReturn(
                 ServerResponse.created(URI.create(BASE_PATH + "/1"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(responseEsperada)
@@ -62,10 +63,10 @@ class ConfigTest {
         webTestClient.post()
                 .uri(BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new PeticionSolicitud("123456789", BigDecimal.valueOf(1000000),
+                .bodyValue(new ApplicationRequest("123456789", BigDecimal.valueOf(1000000),
                         12, "test@example.com",
-                        new PeticionSolicitud.EstadoRequest(),
-                        new PeticionSolicitud.TipoPrestamoRequest()))
+                        new ApplicationRequest.StateRequest(),
+                        new ApplicationRequest.LoanTypeRequest()))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -73,25 +74,22 @@ class ConfigTest {
                 .jsonPath("$.id").isEqualTo("1");
     }
 
-    //@Test
-    void post_debeRetornarBadRequest_cuandoElUseCaseFalla() {
-        PeticionSolicitud requestBody = new PeticionSolicitud(
+    @Test
+    void post_shouldReturnBadRequest_whenHandlerFails() {
+        when(handler.register(any())).thenReturn(
+                ServerResponse.badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Map.of("error", "Invalid data"))
+        );
+
+        ApplicationRequest requestBody = new ApplicationRequest(
                 "123456789",
                 BigDecimal.valueOf(1000000),
                 12,
                 "test@example.com",
-                new PeticionSolicitud.EstadoRequest(),
-                new PeticionSolicitud.TipoPrestamoRequest()
+                new ApplicationRequest.StateRequest(),
+                new ApplicationRequest.LoanTypeRequest()
         );
-
-        when(mapper.aDominio(any(PeticionSolicitud.class)))
-                .thenReturn(Solicitud.builder()
-                        .documentoCliente("123456789")
-                        .monto(BigDecimal.valueOf(1000000))
-                        .build());
-
-        when(useCase.registrar(any(Solicitud.class)))
-                .thenReturn(Mono.error(new IllegalArgumentException("Datos inválidos")));
 
         webTestClient.post()
                 .uri(BASE_PATH)
@@ -101,17 +99,21 @@ class ConfigTest {
                 .expectStatus().isBadRequest()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.error").isEqualTo("Datos inválidos");
+                .jsonPath("$.error").isEqualTo("Invalid data");
     }
 
-    //@Test
-    void losEncabezadosDeSeguridad_debenEstarConfiguradosCorrectamente() {
-        when(repositorioSolicitud.findAll()).thenReturn(Flux.empty());
+    @Test
+    void securityHeaders_shouldBeConfiguredCorrectly() {
+        when(handler.list(any())).thenReturn(
+                ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Flux.empty(), ApplicationResponse.class)
+        );
 
         webTestClient.get()
                 .uri(BASE_PATH)
                 .exchange()
-                .expectStatus().isOk() // Now the GET request should be OK and not a 404
+                .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
                 .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
                 .expectHeader().valueEquals("X-Content-Type-Options", "nosniff")

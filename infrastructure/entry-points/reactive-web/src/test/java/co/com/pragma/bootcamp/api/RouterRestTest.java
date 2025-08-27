@@ -27,11 +27,11 @@ class RouterRestTest {
     @MockitoBean
     private Handler handler;
 
-    private static final String BASE_PATH = "/api/v1/solicitud";
+    private static final String BASE_PATH = "/api/v1/applications";
 
     @Test
-    void post_debeSerEnrutadoAlHandler() {
-        when(handler.registrar(any(ServerRequest.class)))
+    void post_shouldBeRoutedToHandler() {
+        when(handler.register(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Mono.just(Map.of("id", "1")), Map.class));
@@ -47,8 +47,8 @@ class RouterRestTest {
     }
 
     @Test
-    void get_debeSerEnrutadoAlHandler() {
-        when(handler.listar(any(ServerRequest.class)))
+    void get_shouldBeRoutedToHandler() {
+        when(handler.list(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(List.of(Map.of("id", "1"))));
@@ -64,8 +64,8 @@ class RouterRestTest {
 
 
     @Test
-    void get_listarTodasSolicitudes_debeRetornarLista() {
-        when(handler.listar(any(ServerRequest.class)))
+    void get_listAllApplications_shouldReturnList() {
+        when(handler.list(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Mono.just(List.of(Map.of("id", "1"))), List.class));

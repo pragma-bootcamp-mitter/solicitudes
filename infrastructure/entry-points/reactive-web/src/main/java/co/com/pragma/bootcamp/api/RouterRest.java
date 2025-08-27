@@ -12,12 +12,12 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 
 @Configuration
 public class RouterRest {
-    private static final String BASE_PATH = "/api/v1/solicitud";
+    private static final String BASE_PATH = "/api/v1/applications";
 
     @Bean
     public RouterFunction<ServerResponse> routes(Handler handler) {
         return RouterFunctions
-                .route(RequestPredicates.POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::registrar)
-                .andRoute(RequestPredicates.GET(BASE_PATH), handler::listar);
+                .route(RequestPredicates.POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::register)
+                .andRoute(RequestPredicates.GET(BASE_PATH), handler::list);
     }
 }
