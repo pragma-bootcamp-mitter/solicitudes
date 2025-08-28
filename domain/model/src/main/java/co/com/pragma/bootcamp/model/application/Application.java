@@ -4,13 +4,11 @@ import co.com.pragma.bootcamp.model.state.State;
 import co.com.pragma.bootcamp.model.loantype.LoanType;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.math.BigDecimal;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)

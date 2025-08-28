@@ -1,6 +1,6 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.Handler;
+import co.com.pragma.bootcamp.api.ApplicationHandler;
 import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +43,7 @@ public class OpenApiSolicitudConfig {
                     path = "/api/v1/solicitud",
                     produces = {"application/json"},
                     method = RequestMethod.POST,
-                    beanClass = Handler.class,
+                    beanClass = ApplicationHandler.class,
                     beanMethod = "register",
                     operation = @Operation(
                             operationId = "registrarSolicitud",
@@ -66,7 +66,7 @@ public class OpenApiSolicitudConfig {
                     path = "/api/v1/solicitud",
                     produces = {"application/json"},
                     method = RequestMethod.GET,
-                    beanClass = Handler.class,
+                    beanClass = ApplicationHandler.class,
                     beanMethod = "list",
                     operation = @Operation(
                             operationId = "listarSolicitudes",
@@ -82,10 +82,10 @@ public class OpenApiSolicitudConfig {
                     )
             )
     })
-    public RouterFunction<ServerResponse> router(Handler handler) {
+    public RouterFunction<ServerResponse> router(ApplicationHandler applicationHandler) {
         return RouterFunctions.route()
-                .POST("/api/v1/solicitud", handler::register)
-                .GET("/api/v1/solicitud", handler::list)
+                .POST("/api/v1/solicitud", applicationHandler::register)
+                .GET("/api/v1/solicitud", applicationHandler::list)
                 .build();
     }
 }

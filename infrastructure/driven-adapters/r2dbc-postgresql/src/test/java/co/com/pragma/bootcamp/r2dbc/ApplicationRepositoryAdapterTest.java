@@ -109,28 +109,4 @@ class ApplicationRepositoryAdapterTest {
         verify(repository).findByClientDocument("987654321");
         verify(mapper, times(0)).toDomain(any(ApplicationEntity.class));
     }
-
-    @Test
-    void toData_shouldMapCorrectly() {
-        // Arrange
-        when(mapper.toEntity(application)).thenReturn(applicationEntity);
-
-        // Act
-        ApplicationEntity result = adapter.toData(application);
-
-        // Assert
-        verify(mapper).toEntity(application);
-    }
-
-    @Test
-    void toEntity_shouldMapCorrectly() {
-        // Arrange
-        when(mapper.toDomain(applicationEntity)).thenReturn(application);
-
-        // Act
-        Application result = adapter.toEntity(applicationEntity);
-
-        // Assert
-        verify(mapper).toDomain(applicationEntity);
-    }
 }

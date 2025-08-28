@@ -11,13 +11,13 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 
 @Configuration
-public class RouterRest {
+public class ApplicationRouterRest {
     private static final String BASE_PATH = "/api/v1/applications";
 
     @Bean
-    public RouterFunction<ServerResponse> routes(Handler handler) {
+    public RouterFunction<ServerResponse> routes(ApplicationHandler applicationHandler) {
         return RouterFunctions
-                .route(RequestPredicates.POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::register)
-                .andRoute(RequestPredicates.GET(BASE_PATH), handler::list);
+                .route(RequestPredicates.POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), applicationHandler::register)
+                .andRoute(RequestPredicates.GET(BASE_PATH), applicationHandler::list);
     }
 }

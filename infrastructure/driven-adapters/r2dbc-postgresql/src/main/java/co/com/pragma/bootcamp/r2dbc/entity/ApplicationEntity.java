@@ -1,6 +1,7 @@
 package co.com.pragma.bootcamp.r2dbc.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 
 @Table("application")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationEntity {

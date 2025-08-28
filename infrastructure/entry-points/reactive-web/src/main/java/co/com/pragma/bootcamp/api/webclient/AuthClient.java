@@ -3,6 +3,8 @@ package co.com.pragma.bootcamp.api.webclient;
 import co.com.pragma.bootcamp.api.dto.UserAuth;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -17,23 +19,25 @@ public class AuthClient {
 
     public Mono<UserAuth> getUserByDocument(String document) {
         log.info("Consulting user by document: {}", document);
-
         return authWebClient.get()
                 .uri("/api/v1/users/{document}", document)
                 .exchangeToMono(response -> {
-                    if (response.statusCode().is2xxSuccessful()) {
-                        log.info("User found with document {}", document);
-                        return response.bodyToMono(UserAuth.class);
-                    } else if (response.statusCode().value() == 404) {
-                        log.warn("User not found with document {}", document);
-                        return Mono.empty();
-                    } else if (response.statusCode().is4xxClientError()) {
-                        log.warn("Client error when consulting user {}: {}", document, response.statusCode());
-                        return Mono.empty();
-                    } else {
-                        log.error("Unexpected error when consulting user {}, status: {}", document, response.statusCode());
-                        return response.createException().flatMap(Mono::error);
-                    }
+                    final HttpStatus statusCode = HttpStatus.valueOf(response.statusCode().value());
+
+                    return switch (statusCode.series()) {
+                        case SUCCESSFUL -> {
+                            log.info("User found with document {}", document);
+                            yield response.bodyToMono(UserAuth.class);
+                        }
+                        case CLIENT_ERROR -> {
+                            log.warn("Client error when consulting user {}: {}", document, response.statusCode());
+                            yield Mono.empty();
+                        }
+                        default -> {
+                            log.error("Unexpected error when consulting user {}, status: {}", document, response.statusCode());
+                            yield response.createException().flatMap(Mono::error);
+                        }
+                    };
                 })
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     log.error("WebClient error when consulting user {}: {}", document, ex.getMessage(), ex);

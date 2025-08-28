@@ -16,8 +16,8 @@ public class AuthRepositoryAdapter implements AuthRepository {
     private final AuthUserMapper mapper;
 
     @Override
-    public Mono<User> getUserByDocument(String documento) {
-        return client.getUserByDocument(documento)
+    public Mono<User> getUserByDocument(String document) {
+        return client.getUserByDocument(document)
                 .map(mapper::toDomain);
     }
 }

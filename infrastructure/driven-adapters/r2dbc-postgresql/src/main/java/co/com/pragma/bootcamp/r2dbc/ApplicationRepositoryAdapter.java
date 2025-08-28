@@ -28,11 +28,6 @@ public class ApplicationRepositoryAdapter
     }
 
     @Override
-    protected Application toEntity(ApplicationEntity data) {
-        return mapper.toDomain(data);
-    }
-
-    @Override
     public Flux<Application> findByClientDocument(String document) {
         return repository.findByClientDocument(document)
                 .map(mapper::toDomain);

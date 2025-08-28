@@ -1,11 +1,10 @@
 package co.com.pragma.bootcamp.api.config;
 
-import co.com.pragma.bootcamp.api.Handler;
-import co.com.pragma.bootcamp.api.RouterRest;
+import co.com.pragma.bootcamp.api.ApplicationHandler;
+import co.com.pragma.bootcamp.api.ApplicationRouterRest;
 import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
 import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
-import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import org.springframework.http.MediaType;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -26,7 +24,7 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+@ContextConfiguration(classes = {ApplicationRouterRest.class, ApplicationHandler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
@@ -41,7 +39,7 @@ class ConfigTest {
     private ApplicationMapper mapper;
 
     @MockitoBean
-    private Handler handler;
+    private ApplicationHandler applicationHandler;
 
     @MockitoBean
     private ApplicationRepository applicationRepository;
@@ -54,7 +52,7 @@ class ConfigTest {
                 .id("1")
                 .build();
 
-        when(handler.register(any())).thenReturn(
+        when(applicationHandler.register(any())).thenReturn(
                 ServerResponse.created(URI.create(BASE_PATH + "/1"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(responseEsperada)
@@ -76,7 +74,7 @@ class ConfigTest {
 
     @Test
     void post_shouldReturnBadRequest_whenHandlerFails() {
-        when(handler.register(any())).thenReturn(
+        when(applicationHandler.register(any())).thenReturn(
                 ServerResponse.badRequest()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Map.of("error", "Invalid data"))
@@ -104,7 +102,7 @@ class ConfigTest {
 
     @Test
     void securityHeaders_shouldBeConfiguredCorrectly() {
-        when(handler.list(any())).thenReturn(
+        when(applicationHandler.list(any())).thenReturn(
                 ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Flux.empty(), ApplicationResponse.class)

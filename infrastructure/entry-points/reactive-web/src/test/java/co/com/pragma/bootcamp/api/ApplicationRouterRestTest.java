@@ -1,5 +1,9 @@
 package co.com.pragma.bootcamp.api;
 
+import co.com.pragma.bootcamp.api.config.GlobalExceptionHandler;
+import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
+import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -14,24 +18,25 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+@ContextConfiguration(classes = {ApplicationRouterRest.class, ApplicationHandler.class, ValidatorUtil.class, GlobalExceptionHandler.class})
 @WebFluxTest
-class RouterRestTest {
+class ApplicationRouterRestTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private Handler handler;
+    private ApplicationHandler applicationHandler;
 
     private static final String BASE_PATH = "/api/v1/applications";
 
     @Test
     void post_shouldBeRoutedToHandler() {
-        when(handler.register(any(ServerRequest.class)))
+        when(applicationHandler.register(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Mono.just(Map.of("id", "1")), Map.class));
@@ -48,7 +53,7 @@ class RouterRestTest {
 
     @Test
     void get_shouldBeRoutedToHandler() {
-        when(handler.list(any(ServerRequest.class)))
+        when(applicationHandler.list(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(List.of(Map.of("id", "1"))));
@@ -65,7 +70,7 @@ class RouterRestTest {
 
     @Test
     void get_listAllApplications_shouldReturnList() {
-        when(handler.list(any(ServerRequest.class)))
+        when(applicationHandler.list(any(ServerRequest.class)))
                 .thenReturn(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Mono.just(List.of(Map.of("id", "1"))), List.class));

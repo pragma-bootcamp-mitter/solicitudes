@@ -15,9 +15,9 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 
-import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.ApplicationErrors.AMOUNT_OUT_OF_RANGE;
-import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.ApplicationErrors.CLIENT_NOT_FOUND;
-import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.ApplicationErrors.LOAN_TYPE_DOES_NOT_EXIST;
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.AMOUNT_OUT_OF_RANGE;
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.LOAN_TYPE_DOES_NOT_EXIST;
 import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.ApplicationState.PENDING_REVIEW;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;

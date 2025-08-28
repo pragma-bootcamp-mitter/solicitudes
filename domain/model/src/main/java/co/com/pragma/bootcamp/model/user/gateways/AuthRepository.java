@@ -4,5 +4,5 @@ import co.com.pragma.bootcamp.model.user.User;
 import reactor.core.publisher.Mono;
 
 public interface AuthRepository {
-    Mono<User> getUserByDocument(String documento);
+    Mono<User> getUserByDocument(String document);
 }
