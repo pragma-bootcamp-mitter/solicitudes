@@ -5,8 +5,7 @@ import co.com.pragma.bootcamp.model.exceptions.BusinessErrorCode;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ConstraintViolation; // Import this class
-import jakarta.validation.ConstraintViolationException; // Import this class
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
@@ -16,10 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors; // Import this class
 
 import static java.util.stream.Collectors.toList;
 

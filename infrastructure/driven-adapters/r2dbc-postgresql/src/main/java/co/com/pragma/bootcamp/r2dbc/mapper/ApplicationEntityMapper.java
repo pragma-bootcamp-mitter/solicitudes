@@ -7,12 +7,10 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ApplicationEntityMapper {
-    // Domain → Data
     @Mapping(target = "stateId", source = "state.id")
     @Mapping(target = "loanTypeId", source = "loanType.id")
     ApplicationEntity toEntity(Application application);
 
-    // Data → Domain
     @Mapping(target = "state.id", source = "stateId")
     @Mapping(target = "loanType.id", source = "loanTypeId")
     Application toDomain(ApplicationEntity applicationEntity);

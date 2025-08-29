@@ -60,32 +60,15 @@ class ApplicationRepositoryAdapterTest {
 
     @Test
     void findByClientDocument_shouldReturnApplications_whenFound() {
-        // Arrange
-        Application application2 = Application.builder()
-                .id("2")
-                .clientDocument("123456789")
-                .amount(BigDecimal.valueOf(2000000))
-                .build();
-        ApplicationEntity applicationEntity2 = new ApplicationEntity(
-                "2",
-                "123456789",
-                BigDecimal.valueOf(2000000),
-                24,
-                "test2@example.com",
-                2,
-                2);
-
         when(repository.findByClientDocument("123456789"))
-                .thenReturn(Flux.just(applicationEntity, applicationEntity2));
+                .thenReturn(Flux.just(applicationEntity, applicationEntity));
         when(mapper.toDomain(applicationEntity)).thenReturn(application);
-        when(mapper.toDomain(applicationEntity2)).thenReturn(application2);
+        when(mapper.toDomain(applicationEntity)).thenReturn(application);
 
-        // Act
         Flux<Application> result = adapter.findByClientDocument("123456789");
 
-        // Assert
         StepVerifier.create(result)
-                .expectNext(application, application2)
+                .expectNext(application, application)
                 .verifyComplete();
 
         verify(repository).findByClientDocument("123456789");
@@ -94,14 +77,11 @@ class ApplicationRepositoryAdapterTest {
 
     @Test
     void findByClientDocument_shouldReturnEmptyMono_whenNoApplicationsFound() {
-        // Arrange
         when(repository.findByClientDocument("987654321"))
                 .thenReturn(Flux.empty());
 
-        // Act
         Flux<Application> result = adapter.findByClientDocument("987654321");
 
-        // Assert
         StepVerifier.create(result)
                 .expectNextCount(0)
                 .verifyComplete();

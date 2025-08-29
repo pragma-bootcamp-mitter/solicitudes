@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api.dto;
+package co.com.pragma.bootcamp.r2dbc.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

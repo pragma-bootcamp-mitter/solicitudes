@@ -1,7 +1,8 @@
-package co.com.pragma.bootcamp.api.mapper;
+package co.com.pragma.bootcamp.r2dbc.mapper;
 
-import co.com.pragma.bootcamp.api.dto.UserAuth;
+
 import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.r2dbc.entity.UserAuth;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

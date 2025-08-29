@@ -35,21 +35,31 @@ class RegisterApplicationUseCaseTest {
     @Mock
     private AuthRepository authRepository;
 
+    private Application application;
+    private LoanType loanType;
+    private User user;
+
     @BeforeEach
     void setUp() {
+        application = new Application();
+        application.setClientDocument("123456");
+        application.setAmount(BigDecimal.valueOf(15000));
+        application.setTermMonths(12);
+
+        loanType = new LoanType();
+        loanType.setId(1);
+        loanType.setMinimumAmount(BigDecimal.valueOf(10000));
+        loanType.setMaximumAmount(BigDecimal.valueOf(20000));
+        application.setLoanType(loanType);
+
+        user = new User();
+        user.setId("u1");
         MockitoAnnotations.openMocks(this);
         useCase = new RegisterApplicationUseCase(applicationRepository, loanTypeRepository, authRepository);
     }
 
     @Test
     void register_shouldFailWhenLoanTypeDoesNotExist() {
-        Application application = new Application();
-        application.setAmount(BigDecimal.valueOf(1000));
-        application.setTermMonths(12);
-        LoanType loanType = new LoanType();
-        loanType.setId(1);
-        application.setLoanType(loanType);
-
         when(loanTypeRepository.findById(1)).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.register(application))
@@ -59,14 +69,7 @@ class RegisterApplicationUseCaseTest {
 
     @Test
     void register_shouldFailWhenAmountIsOutOfRange() {
-        Application application = new Application();
         application.setAmount(BigDecimal.valueOf(5000));
-        application.setTermMonths(12);
-        LoanType loanType = new LoanType();
-        loanType.setId(1);
-        loanType.setMinimumAmount(BigDecimal.valueOf(10000));
-        loanType.setMaximumAmount(BigDecimal.valueOf(20000));
-        application.setLoanType(loanType);
 
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
 
@@ -77,15 +80,6 @@ class RegisterApplicationUseCaseTest {
 
     @Test
     void register_shouldFailWhenClientIsNotFound() {
-        Application application = new Application();
-        application.setAmount(BigDecimal.valueOf(15000));
-        application.setTermMonths(12);
-        LoanType loanType = new LoanType();
-        loanType.setId(1);
-        loanType.setMinimumAmount(BigDecimal.valueOf(10000));
-        loanType.setMaximumAmount(BigDecimal.valueOf(20000));
-        application.setLoanType(loanType);
-
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.empty());
 
@@ -96,19 +90,6 @@ class RegisterApplicationUseCaseTest {
 
     @Test
     void register_shouldSaveApplicationOnSuccess() {
-        Application application = new Application();
-        application.setClientDocument("123456");
-        application.setAmount(BigDecimal.valueOf(15000));
-        application.setTermMonths(12);
-        LoanType loanType = new LoanType();
-        loanType.setId(1);
-        loanType.setMinimumAmount(BigDecimal.valueOf(10000));
-        loanType.setMaximumAmount(BigDecimal.valueOf(20000));
-        application.setLoanType(loanType);
-
-        User user = new User();
-        user.setId("u1");
-
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
         when(authRepository.getUserByDocument("123456")).thenReturn(Mono.just(user));
         when(applicationRepository.save(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));

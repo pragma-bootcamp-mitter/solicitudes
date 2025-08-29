@@ -1,14 +1,15 @@
-package co.com.pragma.bootcamp.api.webclient;
+package co.com.pragma.bootcamp.r2dbc.webclient;
 
-import co.com.pragma.bootcamp.api.dto.UserAuth;
+
+import co.com.pragma.bootcamp.r2dbc.entity.UserAuth;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+
 
 @Component
 @RequiredArgsConstructor

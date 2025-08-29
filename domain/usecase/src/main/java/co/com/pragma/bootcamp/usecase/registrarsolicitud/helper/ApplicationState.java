@@ -3,9 +3,7 @@ package co.com.pragma.bootcamp.usecase.registrarsolicitud.helper;
 import co.com.pragma.bootcamp.model.state.State;
 
 public enum ApplicationState {
-    PENDING_REVIEW(1, "PENDING_REVIEW", "Application is pending review"),
-    APPROVED(2, "APPROVED", "Application has been approved"),
-    REJECTED(3, "REJECTED", "Application has been rejected");
+    PENDING_REVIEW(1, "PENDING_REVIEW", "Application is pending review");
 
     private final Integer id;
     private final String name;
