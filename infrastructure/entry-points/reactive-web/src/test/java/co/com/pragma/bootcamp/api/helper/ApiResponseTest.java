@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.api;
+package co.com.pragma.bootcamp.api.helper;
 
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;

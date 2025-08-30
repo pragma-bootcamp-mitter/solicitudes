@@ -3,6 +3,7 @@ package co.com.pragma.bootcamp.r2dbc;
 import co.com.pragma.bootcamp.model.state.State;
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.loantype.LoanType;
+import co.com.pragma.bootcamp.r2dbc.adapter.ApplicationRepositoryAdapter;
 import co.com.pragma.bootcamp.r2dbc.entity.ApplicationEntity;
 import co.com.pragma.bootcamp.r2dbc.mapper.ApplicationEntityMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,11 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.ReactiveTransaction;
+import org.springframework.transaction.reactive.TransactionCallback;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +35,9 @@ class ApplicationRepositoryAdapterTest {
 
     @Mock
     private ApplicationEntityMapper mapper;
+
+    @Mock
+    private TransactionalOperator transactionalOperator;
 
     @InjectMocks
     private ApplicationRepositoryAdapter adapter;
@@ -88,5 +98,50 @@ class ApplicationRepositoryAdapterTest {
 
         verify(repository).findByClientDocument("987654321");
         verify(mapper, times(0)).toDomain(any(ApplicationEntity.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void save_shouldReturnApplication_whenSuccessful() {
+        when(mapper.toEntity(application)).thenReturn(applicationEntity);
+        when(repository.save(applicationEntity)).thenReturn(Mono.just(applicationEntity));
+        when(mapper.toDomain(applicationEntity)).thenReturn(application);
+
+        when(transactionalOperator.execute(any(TransactionCallback.class)))
+                .thenAnswer(invocation -> {
+                    TransactionCallback<ApplicationEntity> callback =
+                            invocation.getArgument(0);
+                    return Flux.defer(() -> callback.doInTransaction(mock(ReactiveTransaction.class)));
+                });
+
+        Mono<Application> result = adapter.save(application);
+
+        StepVerifier.create(result)
+                .expectNext(application)
+                .verifyComplete();
+
+        verify(mapper).toEntity(application);
+        verify(repository).save(applicationEntity);
+        verify(mapper).toDomain(applicationEntity);
+    }
+
+
+    @Test
+    void save_shouldPropagateError_whenRepositoryFails() {
+        when(mapper.toEntity(application)).thenReturn(applicationEntity);
+
+        when(transactionalOperator.execute(any()))
+                .thenReturn(Flux.error(new RuntimeException("DB error")));
+
+        Mono<Application> result = adapter.save(application);
+
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("DB error"))
+                .verify();
+
+        verify(mapper).toEntity(application);
+        verify(repository, never()).save(any());
+        verify(mapper, never()).toDomain(any());
     }
 }

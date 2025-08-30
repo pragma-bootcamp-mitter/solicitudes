@@ -2,6 +2,7 @@ package co.com.pragma.bootcamp.config;
 
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.model.loantype.gateways.LoanTypeRepository;
+import co.com.pragma.bootcamp.model.state.gateways.StateRepository;
 import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;
 import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,9 @@ public class UseCasesConfigTest {
         @Mock
         private AuthRepository authRepository;
 
+        @Mock
+        private StateRepository stateRepository;
+
         @Bean
         public MyUseCase myUseCase() {
             return new MyUseCase();
@@ -55,7 +59,8 @@ public class UseCasesConfigTest {
             return new RegisterApplicationUseCase(
                     applicationRepository,
                     loanTypeRepository,
-                    authRepository
+                    authRepository,
+                    stateRepository
             );
         }
     }

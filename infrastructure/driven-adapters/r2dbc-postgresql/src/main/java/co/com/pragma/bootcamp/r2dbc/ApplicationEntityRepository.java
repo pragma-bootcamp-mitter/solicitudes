@@ -8,5 +8,5 @@ import reactor.core.publisher.Flux;
 public interface ApplicationEntityRepository extends
         ReactiveCrudRepository<ApplicationEntity, String>,
         ReactiveQueryByExampleExecutor<ApplicationEntity> {
-    Flux<ApplicationEntity> findByClientDocument(String documentoCliente);
+    Flux<ApplicationEntity> findByClientDocument(String clientDocument);
 }

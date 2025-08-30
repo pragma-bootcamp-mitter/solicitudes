@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc;
+package co.com.pragma.bootcamp.r2dbc.adapter;
 
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;

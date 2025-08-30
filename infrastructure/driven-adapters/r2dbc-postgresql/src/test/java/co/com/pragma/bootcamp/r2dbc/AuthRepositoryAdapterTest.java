@@ -1,6 +1,7 @@
 package co.com.pragma.bootcamp.r2dbc;
 
 import co.com.pragma.bootcamp.model.user.User;
+import co.com.pragma.bootcamp.r2dbc.adapter.AuthRepositoryAdapter;
 import co.com.pragma.bootcamp.r2dbc.entity.UserAuth;
 import co.com.pragma.bootcamp.r2dbc.mapper.AuthUserMapper;
 import co.com.pragma.bootcamp.r2dbc.webclient.AuthClient;

@@ -6,7 +6,7 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 public interface StateEntityRepository extends
-        ReactiveCrudRepository<StateEntity, String>,
+        ReactiveCrudRepository<StateEntity, Integer>,
         ReactiveQueryByExampleExecutor<StateEntity> {
-    Mono<StateEntity> findByName(String nombre);
+    Mono<StateEntity> findByStateId(Integer id);
 }
