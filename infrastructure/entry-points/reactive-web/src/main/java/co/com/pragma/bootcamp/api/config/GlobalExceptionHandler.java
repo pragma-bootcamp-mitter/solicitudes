@@ -18,6 +18,13 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.ERROR_KEY;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.FIELD_KEY;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.GENERIC_ERROR_MESSAGE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.INTERNAL_SERVER_ERROR_CODE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.INTERNAL_SERVER_ERROR_TITLE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SERIALIZATION_ERROR_MESSAGE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.UNEXPECTED_ERROR_MESSAGE;
 import static java.util.stream.Collectors.toList;
 
 @Component
@@ -45,7 +52,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             case WebExchangeBindException validationEx -> {
                 HttpStatus status = HttpStatus.BAD_REQUEST;
                 List<Map<String, String>> errors = validationEx.getFieldErrors().stream()
-                        .map(e -> Map.of("field", e.getField(), "error", e.getDefaultMessage()))
+                        .map(e -> Map.of(FIELD_KEY, e.getField(), ERROR_KEY, e.getDefaultMessage()))
                         .toList();
                 ApiResponse<?> apiResponse = ApiResponse.validationError(errors);
                 yield buildErrorResponse(exchange, status, apiResponse);
@@ -53,7 +60,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             case ConstraintViolationException constraintViolationEx -> {
                 HttpStatus status = HttpStatus.BAD_REQUEST;
                 List<Map<String, String>> errors = constraintViolationEx.getConstraintViolations().stream()
-                        .map(violation -> Map.of("field", violation.getPropertyPath().toString(), "error", violation.getMessage()))
+                        .map(violation -> Map.of(FIELD_KEY, violation.getPropertyPath().toString(), ERROR_KEY, violation.getMessage()))
                         .collect(toList());
                 ApiResponse<?> apiResponse = ApiResponse.validationError(errors);
                 yield buildErrorResponse(exchange, status, apiResponse);
@@ -61,11 +68,11 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             default -> {
                 HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
                 ApiResponse<?> apiResponse = ApiResponse.businessError(
-                        "GEN_500",
-                        "An unexpected error has occurred",
-                        "Internal Server Error"
+                        INTERNAL_SERVER_ERROR_CODE,
+                        GENERIC_ERROR_MESSAGE,
+                        INTERNAL_SERVER_ERROR_TITLE
                 );
-                log.error("Unexpected error during request processing", ex);
+                log.error(UNEXPECTED_ERROR_MESSAGE, ex);
                 yield buildErrorResponse(exchange, status, apiResponse);
             }
         };
@@ -79,7 +86,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             var buffer = exchange.getResponse().bufferFactory().wrap(bytes);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         } catch (JsonProcessingException e) {
-            log.error("Error serializing error response", e);
+            log.error(SERIALIZATION_ERROR_MESSAGE, e);
             exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             return exchange.getResponse().setComplete();
         }

@@ -76,4 +76,33 @@ class StateAdapterTest {
         verify(repository).findByStateId(2);
         verify(mapper, never()).toDomain(any());
     }
+
+    @Test
+    void findByName_shouldReturnState_whenFound() {
+        when(repository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(stateEntity));
+        when(mapper.toDomain(stateEntity)).thenReturn(stateDomain);
+
+        Mono<State> result = adapter.findByName("PENDING_REVIEW");
+
+        StepVerifier.create(result)
+                .expectNext(stateDomain)
+                .verifyComplete();
+
+        verify(repository).findByName("PENDING_REVIEW");
+        verify(mapper).toDomain(stateEntity);
+    }
+
+    @Test
+    void findByName_shouldReturnEmptyMono_whenNotFound() {
+        when(repository.findByName("NON_EXISTENT")).thenReturn(Mono.empty());
+
+        Mono<State> result = adapter.findByName("NON_EXISTENT");
+
+        StepVerifier.create(result)
+                .expectNextCount(0)
+                .verifyComplete();
+
+        verify(repository).findByName("NON_EXISTENT");
+        verify(mapper, never()).toDomain(any());
+    }
 }

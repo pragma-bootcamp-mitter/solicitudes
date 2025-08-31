@@ -8,6 +8,13 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.BAD_REQUEST_TITLE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SUCCESS_CODE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SUCCESS_MESSAGE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SUCCESS_TITLE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.VALIDATION_ERROR_CODE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.VALIDATION_ERROR_MESSAGE;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,9 +29,9 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
-                .code("B200-000")
-                .message("Operation carried out successfully")
-                .title("Successfully")
+                .code(SUCCESS_CODE)
+                .message(SUCCESS_MESSAGE)
+                .title(SUCCESS_TITLE)
                 .data(data)
                 .build();
     }
@@ -39,9 +46,9 @@ public class ApiResponse<T> {
 
     public static ApiResponse<Void> validationError(List<Map<String, String>> errors) {
         return ApiResponse.<Void>builder()
-                .code("B400-000")
-                .message("Bad Request-fields bad format")
-                .title("Bad Request")
+                .code(VALIDATION_ERROR_CODE)
+                .message(VALIDATION_ERROR_MESSAGE)
+                .title(BAD_REQUEST_TITLE)
                 .errors(errors)
                 .build();
     }

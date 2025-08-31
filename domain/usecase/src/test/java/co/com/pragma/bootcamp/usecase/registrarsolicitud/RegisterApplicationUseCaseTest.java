@@ -21,13 +21,11 @@ import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.AMOUNT_O
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.LOAN_TYPE_DOES_NOT_EXIST;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.STATE_NOT_FOUND;
+import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.DomainConstants.PENDING_REVIEW_STATE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class RegisterApplicationUseCaseTest {
-
-    @InjectMocks
-    private RegisterApplicationUseCase useCase;
 
     @Mock
     private ApplicationRepository applicationRepository;
@@ -41,6 +39,9 @@ class RegisterApplicationUseCaseTest {
     @Mock
     private StateRepository stateRepository;
 
+    @InjectMocks
+    private RegisterApplicationUseCase useCase;
+
     private Application application;
     private LoanType loanType;
     private User user;
@@ -49,7 +50,11 @@ class RegisterApplicationUseCaseTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        useCase = new RegisterApplicationUseCase(applicationRepository, loanTypeRepository, authRepository, stateRepository);
+        useCase = new RegisterApplicationUseCase(
+                applicationRepository,
+                loanTypeRepository,
+                authRepository,
+                stateRepository);
 
         application = new Application();
         application.setClientDocument("123456");
@@ -59,10 +64,6 @@ class RegisterApplicationUseCaseTest {
         LoanType initialLoanType = new LoanType();
         initialLoanType.setId(1);
         application.setLoanType(initialLoanType);
-
-        State initialState = new State();
-        initialState.setId(1);
-        application.setState(initialState);
 
         loanType = new LoanType();
         loanType.setId(1);
@@ -74,7 +75,7 @@ class RegisterApplicationUseCaseTest {
 
         pendingReviewState = new State();
         pendingReviewState.setId(1);
-        pendingReviewState.setName("PENDING_REVIEW");
+        pendingReviewState.setName(PENDING_REVIEW_STATE);
         pendingReviewState.setDescription("Application is pending review");
     }
 
@@ -82,8 +83,7 @@ class RegisterApplicationUseCaseTest {
     void register_shouldSaveApplicationOnSuccess() {
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
         when(authRepository.getUserByDocument("123456")).thenReturn(Mono.just(user));
-        when(stateRepository.findById(1)).thenReturn(Mono.just(pendingReviewState));
-
+        when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> {
             Application savedApp = invocation.getArgument(0);
             return Mono.just(savedApp);
@@ -100,10 +100,9 @@ class RegisterApplicationUseCaseTest {
 
     @Test
     void register_shouldFailWhenPendingReviewStateNotFound() {
-        // Mock solo la búsqueda del estado, asegurándonos de que retorne un Mono.empty() para simular que no se encuentra.
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
         when(authRepository.getUserByDocument("123456")).thenReturn(Mono.just(user));
-        when(stateRepository.findById(1)).thenReturn(Mono.empty());
+        when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.register(application))
                 .expectErrorMessage(STATE_NOT_FOUND.getMessage())
@@ -114,8 +113,7 @@ class RegisterApplicationUseCaseTest {
     void register_shouldFailWhenLoanTypeDoesNotExist() {
         when(loanTypeRepository.findById(1)).thenReturn(Mono.empty());
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.just(user));
-        when(stateRepository.findById(any())).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(application));
+        when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
 
         StepVerifier.create(useCase.register(application))
                 .expectErrorMessage(LOAN_TYPE_DOES_NOT_EXIST.getMessage())
@@ -127,8 +125,7 @@ class RegisterApplicationUseCaseTest {
         application.setAmount(BigDecimal.valueOf(5000));
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.just(user));
-        when(stateRepository.findById(any())).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(application));
+        when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
 
         StepVerifier.create(useCase.register(application))
                 .expectErrorMessage(AMOUNT_OUT_OF_RANGE.getMessage())
@@ -139,8 +136,7 @@ class RegisterApplicationUseCaseTest {
     void register_shouldFailWhenClientIsNotFound() {
         when(loanTypeRepository.findById(1)).thenReturn(Mono.just(loanType));
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.empty());
-        when(stateRepository.findById(any())).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.save(any(Application.class))).thenReturn(Mono.just(application));
+        when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
 
         StepVerifier.create(useCase.register(application))
                 .expectErrorMessage(CLIENT_NOT_FOUND.getMessage())

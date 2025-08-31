@@ -9,4 +9,5 @@ public interface StateEntityRepository extends
         ReactiveCrudRepository<StateEntity, Integer>,
         ReactiveQueryByExampleExecutor<StateEntity> {
     Mono<StateEntity> findByStateId(Integer id);
+    Mono<StateEntity> findByName(String name);
 }

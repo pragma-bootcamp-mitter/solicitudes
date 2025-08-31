@@ -17,6 +17,7 @@ import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_N
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.AMOUNT_OUT_OF_RANGE;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.LOAN_TYPE_DOES_NOT_EXIST;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.STATE_NOT_FOUND;
+import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.DomainConstants.PENDING_REVIEW_STATE;
 
 @RequiredArgsConstructor
 public class RegisterApplicationUseCase {
@@ -29,7 +30,6 @@ public class RegisterApplicationUseCase {
     public Mono<Application> register(Application application) {
         Integer loanTypeId = application.getLoanType().getId();
         String clientDocument = application.getClientDocument();
-        Integer stateId = application.getState().getId();
 
         Mono<LoanType> loanTypeMono = loanTypeRepository.findById(loanTypeId)
                 .switchIfEmpty(Mono.error(new BusinessException(LOAN_TYPE_DOES_NOT_EXIST)));
@@ -37,14 +37,15 @@ public class RegisterApplicationUseCase {
         Mono<User> userMono = authRepository.getUserByDocument(clientDocument)
                 .switchIfEmpty(Mono.error(new BusinessException(CLIENT_NOT_FOUND)));
 
-        Mono<State> stateMono = stateRepository.findById(stateId)
+        Mono<State> stateMono = stateRepository.findByName(PENDING_REVIEW_STATE)
                 .switchIfEmpty(Mono.error(new BusinessException(STATE_NOT_FOUND)));
 
         return Mono.zip(loanTypeMono, userMono, stateMono)
                 .filter(tuple -> {
                     LoanType loanType = tuple.getT1();
                     BigDecimal amount = application.getAmount();
-                    return amount.compareTo(loanType.getMinimumAmount()) >= 0 && amount.compareTo(loanType.getMaximumAmount()) <= 0;
+                    return amount.compareTo(loanType.getMinimumAmount()) >= 0
+                            && amount.compareTo(loanType.getMaximumAmount()) <= 0;
                 })
                 .switchIfEmpty(Mono.error(new BusinessException(AMOUNT_OUT_OF_RANGE)))
                 .flatMap(tuple -> {

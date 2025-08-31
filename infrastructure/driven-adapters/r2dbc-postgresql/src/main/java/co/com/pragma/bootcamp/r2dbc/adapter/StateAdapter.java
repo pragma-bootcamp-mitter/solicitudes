@@ -23,4 +23,10 @@ public class StateAdapter implements StateRepository {
         return repository.findByStateId(id)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public Mono<State> findByName(String name) {
+        return repository.findByName(name)
+                .map(mapper::toDomain);
+    }
 }
