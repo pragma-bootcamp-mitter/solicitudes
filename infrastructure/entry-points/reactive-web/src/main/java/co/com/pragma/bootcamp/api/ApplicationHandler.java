@@ -25,6 +25,7 @@ public class ApplicationHandler {
     private final ApplicationMapper mapper;
     private final ValidatorUtil validatorUtil;
 
+
     public Mono<ServerResponse> register(ServerRequest request) {
         return request.bodyToMono(ApplicationRequest.class)
                 .flatMap(validatorUtil::validate)
@@ -38,6 +39,7 @@ public class ApplicationHandler {
                 );
     }
 
+    @SuppressWarnings("unused")
     public Mono<ServerResponse> list(ServerRequest request) {
         return applicationRepository.findAll()
                 .map(mapper::toResponse)

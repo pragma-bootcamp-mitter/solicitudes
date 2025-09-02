@@ -31,6 +31,7 @@ public class RegisterApplicationUseCase {
         Integer loanTypeId = application.getLoanType().getId();
         String clientDocument = application.getClientDocument();
 
+        //validaciones de error en el adapter, mover eso al adapter para limpiar el caso de uso
         Mono<LoanType> loanTypeMono = loanTypeRepository.findById(loanTypeId)
                 .switchIfEmpty(Mono.error(new BusinessException(LOAN_TYPE_DOES_NOT_EXIST)));
 

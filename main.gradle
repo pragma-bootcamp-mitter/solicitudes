@@ -116,8 +116,7 @@ tasks.register('jacocoRootReport', JacocoReport) {
                 '**/mapper/**',
                 '**/config/**',
                 '**/exceptions/**',
-                '**/MainApplication.class',
-                "**/co/com/pragma/bootcamp/api/webclient/**"
+                '**/MainApplication.class'
         ])
     })
 

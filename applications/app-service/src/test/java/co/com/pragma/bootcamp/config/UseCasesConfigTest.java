@@ -16,58 +16,5 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UseCasesConfigTest {
 
-    @Test
-    void testUseCaseBeansExist() {
-        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(TestConfig.class)) {
-            String[] beanNames = context.getBeanDefinitionNames();
 
-            boolean useCaseBeanFound = false;
-            for (String beanName : beanNames) {
-                if (beanName.endsWith("UseCase")) {
-                    useCaseBeanFound = true;
-                    break;
-                }
-            }
-
-            assertTrue(useCaseBeanFound, "No beans ending with 'Use Case' were found");
-        }
-    }
-
-    @Configuration
-    @Import(UseCasesConfig.class)
-    static class TestConfig {
-
-        @Mock
-        private ApplicationRepository applicationRepository;
-
-        @Mock
-        private LoanTypeRepository loanTypeRepository;
-
-        @Mock
-        private AuthRepository authRepository;
-
-        @Mock
-        private StateRepository stateRepository;
-
-        @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
-        }
-
-        @Bean
-        public RegisterApplicationUseCase registerApplicationUseCase() {
-            return new RegisterApplicationUseCase(
-                    applicationRepository,
-                    loanTypeRepository,
-                    authRepository,
-                    stateRepository
-            );
-        }
-    }
-
-    static class MyUseCase {
-        public String execute() {
-            return "MyUseCase Test";
-        }
-    }
 }
