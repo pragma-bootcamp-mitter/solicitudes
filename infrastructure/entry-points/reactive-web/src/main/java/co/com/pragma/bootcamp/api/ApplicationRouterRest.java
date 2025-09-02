@@ -4,12 +4,15 @@ import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +31,14 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
                 version = "1.0.0",
                 description = "API for managing loan applications in the system",
                 contact = @Contact(name = "Bootcamp Team", email = "soporte@pragma.com")
-        )
+        ),
+        security = @SecurityRequirement(name = "bearerAuth")
+)
+@SecurityScheme(
+        name = "bearerAuth",
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        bearerFormat = "JWT"
 )
 public class ApplicationRouterRest {
     private static final String BASE_PATH = "/api/v1/applications";
