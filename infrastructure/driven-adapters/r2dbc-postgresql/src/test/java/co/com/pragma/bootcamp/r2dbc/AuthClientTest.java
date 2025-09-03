@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.r2dbc;
 
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.r2dbc.webclient.AuthClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.web.reactive.function.client.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -31,9 +33,11 @@ class AuthClientTest {
 
     @Test
     void getUserByDocument_successfulResponse_returnsUserAuth() {
+        String responseBody = "{\"code\":\"200\",\"message\":\"OK\",\"title\":\"Success\",\"data\":{\"id\":\"1\",\"identificationDocument\":\"12345\",\"firstName\":\"John\",\"lastName\":\"Doe\",\"dateOfBirth\":\"1990-01-01\",\"address\":\"Street 123\",\"phoneNumber\":\"555-555\",\"email\":\"test@email.com\",\"baseSalary\":5000,\"password\":\"pass123\",\"roleId\":1}}";
+
         ClientResponse clientResponse = ClientResponse.create(HttpStatus.OK)
                 .header("Content-Type", "application/json")
-                .body("{\"id\":\"1\",\"identificationDocument\":\"12345\",\"firstName\":\"John\",\"lastName\":\"Doe\",\"dateOfBirth\":\"1990-01-01\",\"address\":\"Street 123\",\"phoneNumber\":\"555-555\",\"email\":\"test@email.com\",\"baseSalary\":5000}")
+                .body(responseBody)
                 .build();
 
         when(exchangeFunction.exchange(any())).thenReturn(Mono.just(clientResponse));
@@ -46,12 +50,15 @@ class AuthClientTest {
     }
 
     @Test
-    void getUserByDocument_clientError_returnsEmpty() {
+    void getUserByDocument_clientError_throwsBusinessException() {
         ClientResponse clientResponse = ClientResponse.create(HttpStatus.NOT_FOUND).build();
         when(exchangeFunction.exchange(any())).thenReturn(Mono.just(clientResponse));
 
         StepVerifier.create(authClient.getUserByDocument("99999"))
-                .verifyComplete();
+                .expectErrorMatches(throwable ->
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getMessage().equals(CLIENT_NOT_FOUND.getMessage()))
+                .verify();
     }
 
     @Test

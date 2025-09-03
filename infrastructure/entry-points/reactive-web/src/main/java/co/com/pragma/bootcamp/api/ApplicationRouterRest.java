@@ -2,8 +2,10 @@ package co.com.pragma.bootcamp.api;
 
 import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
+import co.com.pragma.bootcamp.api.dto.ApplicationSummaryResponse;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -92,6 +94,38 @@ public class ApplicationRouterRest {
             )
     )
     public RouterFunction<ServerResponse> listApplicationsRoute(ApplicationHandler applicationHandler) {
+        return route(GET(BASE_PATH), applicationHandler::list);
+    }
+
+
+    @Bean
+    @RouterOperation(
+            path = BASE_PATH,
+            produces = {"application/json"},
+            method = RequestMethod.GET,
+            beanClass = ApplicationHandler.class,
+            beanMethod = "list",
+            operation = @Operation(
+                    operationId = "listApplicationsForReview",
+                    summary = "List applications for manual review",
+                    description = "Retrieves a paginated and filterable list of applications that require manual review by an advisor.",
+                    tags = {"Applications"},
+                    parameters = {
+                            @Parameter(name = "page", description = "Page number (0-indexed)", required = false, schema = @Schema(type = "integer", defaultValue = "0")),
+                            @Parameter(name = "size", description = "Number of elements per page", required = false, schema = @Schema(type = "integer", defaultValue = "10")),
+                            @Parameter(name = "stateName", description = "Filter by application state (e.g., PENDING_REVIEW, REJECTED)", required = false, schema = @Schema(type = "string", defaultValue = "PENDING_REVIEW"))
+                    },
+                    responses = {
+                            @ApiResponse(responseCode = "200", description = "List of applications for review",
+                                    content = @Content(schema = @Schema(implementation = ApplicationSummaryResponse.class))),
+                            @ApiResponse(responseCode = "400", description = "Invalid request or state not found"),
+                            @ApiResponse(responseCode = "403", description = "Forbidden (user not an Advisor)"),
+                            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+                    },
+                    security = @SecurityRequirement(name = "bearerAuth")
+            )
+    )
+    public RouterFunction<ServerResponse> listApplicationsForReviewRoute(ApplicationHandler applicationHandler) {
         return route(GET(BASE_PATH), applicationHandler::list);
     }
 }

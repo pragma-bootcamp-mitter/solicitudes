@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.r2dbc.entity;
+package co.com.pragma.bootcamp.r2dbc.entity.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,4 +19,6 @@ public class UserAuth {
     private String phoneNumber;
     private String email;
     private BigDecimal baseSalary;
+    private String password;
+    private Integer roleId;
 }

@@ -2,11 +2,14 @@ package co.com.pragma.bootcamp.api;
 
 import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
+import co.com.pragma.bootcamp.api.dto.ApplicationSummaryResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
+import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
+import co.com.pragma.bootcamp.usecase.listapplications.ListApplicationsUseCase;
+import co.com.pragma.bootcamp.usecase.registerapplication.ApplicationUseCase;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -43,7 +46,10 @@ class ApplicationHandlerTest {
     private ApplicationHandler applicationHandler;
 
     @Mock
-    private RegisterApplicationUseCase useCase;
+    private ListApplicationsUseCase listUseCase;
+
+    @Mock
+    private ApplicationUseCase useCase;
 
     @Mock
     private ApplicationRepository applicationRepository;
@@ -60,6 +66,8 @@ class ApplicationHandlerTest {
     private Application testApplicationDomain;
     private ApplicationRequest testApplicationRequest;
     private ApplicationResponse testApplicationResponse;
+    private ApplicationSummary testApplicationSummary;
+    private ApplicationSummaryResponse testApplicationSummaryResponse;
 
     @BeforeEach
     void setUp() {
@@ -84,6 +92,32 @@ class ApplicationHandlerTest {
                 .clientDocument("123456789")
                 .amount(BigDecimal.valueOf(1000))
                 .termMonths(12)
+                .build();
+
+        testApplicationSummary = ApplicationSummary.builder()
+                .id("app-123")
+                .amount(BigDecimal.valueOf(1000))
+                .termMonths(12)
+                .email("test@test.com")
+                .clientName("Test User")
+                .loanTypeName("Automobile Loan")
+                .interestRate(BigDecimal.valueOf(0.05))
+                .stateName("PENDING_REVIEW")
+                .baseSalary(BigDecimal.valueOf(5000))
+                .totalMonthlyDebt(BigDecimal.valueOf(1000))
+                .build();
+
+        testApplicationSummaryResponse = ApplicationSummaryResponse.builder()
+                .id("app-123")
+                .amount(BigDecimal.valueOf(1000))
+                .termMonths(12)
+                .email("test@test.com")
+                .clientName("Test User")
+                .loanTypeName("Automobile Loan")
+                .interestRate(BigDecimal.valueOf(0.05))
+                .stateName("PENDING_REVIEW")
+                .baseSalary(BigDecimal.valueOf(5000))
+                .totalMonthlyDebt(BigDecimal.valueOf(1000))
                 .build();
     }
 
@@ -140,8 +174,11 @@ class ApplicationHandlerTest {
 
     @Test
     void list_shouldReturnOk_whenApplicationsExist() {
-        when(applicationRepository.findAll()).thenReturn(Flux.just(testApplicationDomain));
-        when(mapper.toResponse(testApplicationDomain)).thenReturn(testApplicationResponse);
+        when(listUseCase.listAll(any(), any())).thenReturn(Flux.just(testApplicationSummary));
+        when(mapper.toSummaryResponse(any())).thenReturn(testApplicationSummaryResponse);
+        when(serverRequest.queryParam("stateName")).thenReturn(java.util.Optional.of("PENDING_REVIEW"));
+        when(serverRequest.queryParam("page")).thenReturn(java.util.Optional.of("0"));
+        when(serverRequest.queryParam("size")).thenReturn(java.util.Optional.of("10"));
 
         Mono<ServerResponse> responseMono = applicationHandler.list(serverRequest);
 
@@ -154,7 +191,10 @@ class ApplicationHandlerTest {
 
     @Test
     void list_shouldReturnOk_whenNoApplicationsExist() {
-        when(applicationRepository.findAll()).thenReturn(Flux.empty());
+        when(listUseCase.listAll(any(), any())).thenReturn(Flux.empty());
+        when(serverRequest.queryParam("stateName")).thenReturn(java.util.Optional.of("PENDING_REVIEW"));
+        when(serverRequest.queryParam("page")).thenReturn(java.util.Optional.of("0"));
+        when(serverRequest.queryParam("size")).thenReturn(java.util.Optional.of("10"));
 
         Mono<ServerResponse> responseMono = applicationHandler.list(serverRequest);
 

@@ -1,6 +1,8 @@
 package co.com.pragma.bootcamp.r2dbc.webclient;
 
-import co.com.pragma.bootcamp.r2dbc.entity.UserAuth;
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
+import co.com.pragma.bootcamp.r2dbc.entity.user.UserAuth;
+import co.com.pragma.bootcamp.r2dbc.entity.user.UserAuthResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
 
 @Component
 @RequiredArgsConstructor
@@ -26,11 +30,12 @@ public class AuthClient {
                     return switch (statusCode.series()) {
                         case SUCCESSFUL -> {
                             log.info("User found with document {}", document);
-                            yield response.bodyToMono(UserAuth.class);
+                            yield response.bodyToMono(UserAuthResponse.class)
+                                    .map(UserAuthResponse::getData);
                         }
                         case CLIENT_ERROR -> {
                             log.warn("Client error when consulting user {}: {}", document, response.statusCode());
-                            yield Mono.empty();
+                            yield Mono.error(new BusinessException(CLIENT_NOT_FOUND));
                         }
                         default -> {
                             log.error("Unexpected error when consulting user {}, status: {}", document, response.statusCode());

@@ -8,7 +8,7 @@ import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.security.config.SecurityConfig;
 import co.com.pragma.bootcamp.security.jwt.TokenValidator;
-import co.com.pragma.bootcamp.usecase.registrarsolicitud.RegisterApplicationUseCase;
+import co.com.pragma.bootcamp.usecase.registerapplication.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -40,7 +40,7 @@ class ConfigTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
-    private RegisterApplicationUseCase useCase;
+    private ApplicationUseCase useCase;
 
     @MockitoBean
     private ApplicationMapper mapper;

@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.r2dbc.adapter;
 
+import co.com.pragma.bootcamp.model.applicationsummary.Pagination;
 import co.com.pragma.bootcamp.r2dbc.ApplicationEntityRepository;
 import co.com.pragma.bootcamp.r2dbc.entity.ApplicationEntity;
 import co.com.pragma.bootcamp.r2dbc.helper.ReactiveAdapterOperations;
@@ -43,5 +44,18 @@ public class ApplicationRepositoryAdapter
         return repository.findByClientDocument(document)
                 .map(applicationEntityMapper::toDomain);
     }
+
+    @Override
+    public Flux<Application> findByStateIdAndPagination(Integer stateId, Pagination pagination) {
+        return repository.findByStateId(stateId, pagination)
+                .map(applicationEntityMapper::toDomain);
+    }
+
+    @Override
+    public Flux<Application> findByClientDocumentAndStateId(String clientDocument, Integer stateId) {
+        return repository.findByClientDocumentAndStateId(clientDocument, stateId)
+                .map(applicationEntityMapper::toDomain);
+    }
+
 }
 

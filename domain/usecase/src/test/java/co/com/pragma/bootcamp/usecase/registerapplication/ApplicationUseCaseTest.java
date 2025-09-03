@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.usecase.registrarsolicitud;
+package co.com.pragma.bootcamp.usecase.registerapplication;
 
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
@@ -10,9 +10,11 @@ import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
@@ -21,11 +23,12 @@ import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.AMOUNT_O
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.LOAN_TYPE_DOES_NOT_EXIST;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.STATE_NOT_FOUND;
-import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.DomainConstants.PENDING_REVIEW_STATE;
+import static co.com.pragma.bootcamp.usecase.registerapplication.helper.DomainConstants.PENDING_REVIEW_STATE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-class RegisterApplicationUseCaseTest {
+@ExtendWith(MockitoExtension.class)
+class ApplicationUseCaseTest {
 
     @Mock
     private ApplicationRepository applicationRepository;
@@ -40,7 +43,7 @@ class RegisterApplicationUseCaseTest {
     private StateRepository stateRepository;
 
     @InjectMocks
-    private RegisterApplicationUseCase useCase;
+    private ApplicationUseCase useCase;
 
     private Application application;
     private LoanType loanType;
@@ -53,7 +56,7 @@ class RegisterApplicationUseCaseTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        useCase = new RegisterApplicationUseCase(
+        useCase = new ApplicationUseCase(
                 applicationRepository,
                 loanTypeRepository,
                 authRepository,
@@ -66,7 +69,7 @@ class RegisterApplicationUseCaseTest {
 
         LoanType initialLoanType = new LoanType();
         initialLoanType.setId(1);
-        application.setLoanType(initialLoanType);
+        application.setLoanTypeId(initialLoanType.getId());
 
         loanType = new LoanType();
         loanType.setId(1);
@@ -94,8 +97,8 @@ class RegisterApplicationUseCaseTest {
 
         StepVerifier.create(useCase.register(application, authenticatedDocument, authenticatedRole))
                 .expectNextMatches(savedApplication ->
-                        savedApplication.getState().getId().equals(1) &&
-                                savedApplication.getLoanType().getId().equals(1) &&
+                        savedApplication.getStateId().equals(1) &&
+                                savedApplication.getLoanTypeId().equals(1) &&
                                 savedApplication.getAmount().compareTo(BigDecimal.valueOf(15000)) == 0
                 )
                 .verifyComplete();

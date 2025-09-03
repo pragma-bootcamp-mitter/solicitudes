@@ -1,4 +1,4 @@
-package co.com.pragma.bootcamp.usecase.registrarsolicitud.helper;
+package co.com.pragma.bootcamp.usecase.registerapplication.helper;
 
 public final class DomainConstants {
 

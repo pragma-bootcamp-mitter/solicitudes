@@ -1,7 +1,5 @@
 package co.com.pragma.bootcamp.model.application;
 
-import co.com.pragma.bootcamp.model.state.State;
-import co.com.pragma.bootcamp.model.loantype.LoanType;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +16,6 @@ public class Application  {
     private BigDecimal amount;
     private Integer termMonths;
     private String email;
-    private State state;
-    private LoanType loanType;
+    private Integer stateId;
+    private Integer loanTypeId;
 }

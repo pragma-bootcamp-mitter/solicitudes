@@ -53,8 +53,8 @@ class ApplicationRepositoryAdapterTest {
                 .amount(BigDecimal.valueOf(1000000))
                 .termMonths(12)
                 .email("test@example.com")
-                .state(State.builder().id(1).name("PENDING_REVIEW").build())
-                .loanType(LoanType.builder().id(1).name("Mortgage").build())
+                .stateId(1)
+                .loanTypeId(1)
                 .build();
 
         applicationEntity = new ApplicationEntity(
