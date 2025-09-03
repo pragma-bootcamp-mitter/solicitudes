@@ -47,6 +47,9 @@ class RegisterApplicationUseCaseTest {
     private User user;
     private State pendingReviewState;
 
+    private final String authenticatedDocument = "101";
+    private final String authenticatedRole = "ADMIN";
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -89,7 +92,7 @@ class RegisterApplicationUseCaseTest {
             return Mono.just(savedApp);
         });
 
-        StepVerifier.create(useCase.register(application))
+        StepVerifier.create(useCase.register(application, authenticatedDocument, authenticatedRole))
                 .expectNextMatches(savedApplication ->
                         savedApplication.getState().getId().equals(1) &&
                                 savedApplication.getLoanType().getId().equals(1) &&
@@ -104,7 +107,7 @@ class RegisterApplicationUseCaseTest {
         when(authRepository.getUserByDocument("123456")).thenReturn(Mono.just(user));
         when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.register(application))
+        StepVerifier.create(useCase.register(application, authenticatedDocument, authenticatedRole))
                 .expectErrorMessage(STATE_NOT_FOUND.getMessage())
                 .verify();
     }
@@ -115,7 +118,7 @@ class RegisterApplicationUseCaseTest {
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.just(user));
         when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
 
-        StepVerifier.create(useCase.register(application))
+        StepVerifier.create(useCase.register(application, authenticatedDocument, authenticatedRole))
                 .expectErrorMessage(LOAN_TYPE_DOES_NOT_EXIST.getMessage())
                 .verify();
     }
@@ -127,7 +130,7 @@ class RegisterApplicationUseCaseTest {
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.just(user));
         when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
 
-        StepVerifier.create(useCase.register(application))
+        StepVerifier.create(useCase.register(application, authenticatedDocument, authenticatedRole))
                 .expectErrorMessage(AMOUNT_OUT_OF_RANGE.getMessage())
                 .verify();
     }
@@ -138,7 +141,7 @@ class RegisterApplicationUseCaseTest {
         when(authRepository.getUserByDocument(any())).thenReturn(Mono.empty());
         when(stateRepository.findByName(PENDING_REVIEW_STATE)).thenReturn(Mono.just(pendingReviewState));
 
-        StepVerifier.create(useCase.register(application))
+        StepVerifier.create(useCase.register(application, authenticatedDocument, authenticatedRole))
                 .expectErrorMessage(CLIENT_NOT_FOUND.getMessage())
                 .verify();
     }

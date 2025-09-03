@@ -18,14 +18,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,18 +89,26 @@ class ApplicationHandlerTest {
 
     @Test
     void register_shouldReturnCreated_whenSuccessful() {
-        when(serverRequest.bodyToMono(ApplicationRequest.class)).thenReturn(Mono.just(testApplicationRequest));
-        when(validatorUtil.validate(testApplicationRequest)).thenReturn(Mono.just(testApplicationRequest));
-        when(mapper.toDomain(testApplicationRequest)).thenReturn(testApplicationDomain);
-        when(useCase.register(testApplicationDomain)).thenReturn(Mono.just(testApplicationDomain));
-        when(mapper.toResponse(testApplicationDomain)).thenReturn(testApplicationResponse);
+        String authenticatedDocument = "101";
+        String authenticatedRole = "ADMIN";
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                authenticatedDocument, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + authenticatedRole))
+        );
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        Mono<ServerResponse> responseMono = applicationHandler.register(serverRequest);
+        when(serverRequest.bodyToMono(ApplicationRequest.class)).thenReturn(Mono.just(testApplicationRequest));
+        when(validatorUtil.validate(any(ApplicationRequest.class))).thenReturn(Mono.just(testApplicationRequest));
+        when(mapper.toDomain(any(ApplicationRequest.class))).thenReturn(testApplicationDomain);
+        when(useCase.register(any(Application.class), any(String.class), any(String.class)))
+                .thenReturn(Mono.just(testApplicationDomain));
+        when(mapper.toResponse(any(Application.class))).thenReturn(testApplicationResponse);
+
+        Mono<ServerResponse> responseMono = Mono.defer(() -> applicationHandler.register(serverRequest))
+                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
 
         StepVerifier.create(responseMono)
-                .expectNextMatches(serverResponse ->
-                        serverResponse.statusCode().equals(HttpStatus.CREATED)
-                )
+                .expectNextMatches(serverResponse -> serverResponse.statusCode().equals(HttpStatus.CREATED))
                 .verifyComplete();
     }
 
@@ -103,10 +119,19 @@ class ApplicationHandlerTest {
         Set<ConstraintViolation<ApplicationRequest>> violations = validator.validate(invalidApplicationRequest);
         ConstraintViolationException validationException = new ConstraintViolationException(violations);
 
-        when(serverRequest.bodyToMono(ApplicationRequest.class)).thenReturn(Mono.just(invalidApplicationRequest));
-        when(validatorUtil.validate(invalidApplicationRequest)).thenReturn(Mono.error(validationException));
+        String authenticatedDocument = "101";
+        String authenticatedRole = "ADMIN";
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                authenticatedDocument, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + authenticatedRole))
+        );
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        Mono<ServerResponse> responseMono = applicationHandler.register(serverRequest);
+        when(serverRequest.bodyToMono(ApplicationRequest.class)).thenReturn(Mono.just(invalidApplicationRequest));
+        when(validatorUtil.validate(any(ApplicationRequest.class))).thenReturn(Mono.error(validationException));
+
+        Mono<ServerResponse> responseMono = Mono.defer(() -> applicationHandler.register(serverRequest))
+                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
 
         StepVerifier.create(responseMono)
                 .expectErrorMatches(ConstraintViolationException.class::isInstance)
@@ -126,7 +151,6 @@ class ApplicationHandlerTest {
                 )
                 .verifyComplete();
     }
-
 
     @Test
     void list_shouldReturnOk_whenNoApplicationsExist() {

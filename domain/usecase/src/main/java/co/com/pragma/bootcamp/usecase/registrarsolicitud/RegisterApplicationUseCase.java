@@ -17,6 +17,8 @@ import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_N
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.AMOUNT_OUT_OF_RANGE;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.LOAN_TYPE_DOES_NOT_EXIST;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.STATE_NOT_FOUND;
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.UNAUTHORIZED_OPERATION;
+import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.DomainConstants.CLIENT;
 import static co.com.pragma.bootcamp.usecase.registrarsolicitud.helper.DomainConstants.PENDING_REVIEW_STATE;
 
 @RequiredArgsConstructor
@@ -27,11 +29,14 @@ public class RegisterApplicationUseCase {
     private final AuthRepository authRepository;
     private final StateRepository stateRepository;
 
-    public Mono<Application> register(Application application) {
+    public Mono<Application> register(Application application, String authenticatedDocument, String authenticatedRole) {
         Integer loanTypeId = application.getLoanType().getId();
         String clientDocument = application.getClientDocument();
 
-        //validaciones de error en el adapter, mover eso al adapter para limpiar el caso de uso
+        if (CLIENT.equals(authenticatedRole) && !clientDocument.equals(authenticatedDocument)) {
+            return Mono.error(new BusinessException(UNAUTHORIZED_OPERATION));
+        }
+
         Mono<LoanType> loanTypeMono = loanTypeRepository.findById(loanTypeId)
                 .switchIfEmpty(Mono.error(new BusinessException(LOAN_TYPE_DOES_NOT_EXIST)));
 

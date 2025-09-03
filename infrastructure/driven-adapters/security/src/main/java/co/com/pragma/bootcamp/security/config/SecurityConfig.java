@@ -19,6 +19,7 @@ public class SecurityConfig {
 
     private final ReactiveAuthenticationManager authenticationManager;
     private final TokenValidator tokenValidator;
+    public static final String ADMIN = "ADMIN";
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -29,8 +30,8 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/swagger-ui/**").permitAll()
                         .pathMatchers("/v3/api-docs/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/v1/applications/**").hasRole("CLIENT")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/applications/**").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.POST, "/api/v1/applications/**").hasAnyRole(ADMIN, "ADVISOR", "CLIENT")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/applications/**").hasRole(ADMIN)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
