@@ -3,6 +3,8 @@ package co.com.pragma.bootcamp.usecase.listapplications;
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
+import co.com.pragma.bootcamp.model.applicationsummary.PageModel;
+import co.com.pragma.bootcamp.model.applicationsummary.Pagination;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.loantype.LoanType;
 import co.com.pragma.bootcamp.model.loantype.gateways.LoanTypeRepository;
@@ -11,8 +13,8 @@ import co.com.pragma.bootcamp.model.state.gateways.StateRepository;
 import co.com.pragma.bootcamp.model.user.User;
 import co.com.pragma.bootcamp.model.user.gateways.AuthRepository;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -28,19 +30,25 @@ public class ListApplicationsUseCase {
     private final StateRepository stateRepository;
     private final LoanTypeRepository loanTypeRepository;
 
-    public Mono<Tuple2<List<ApplicationSummary>, Long>> listByState(int size, int page, String stateName) {
-        Mono<State> stateMono = stateRepository.findByName(stateName)
-                .switchIfEmpty(Mono.error(new BusinessException(STATE_NOT_FOUND)));
+    public Mono<PageModel<ApplicationSummary>> listByState(int size, int page, String stateName) {
+        Pagination pagination = Pagination.builder().page(page).size(size).build();
 
-        Mono<Long> countMono = stateMono
-                .flatMap(state -> applicationRepository.countByStateId(state.getId()));
+        return stateRepository.findByName(stateName)
+                .switchIfEmpty(Mono.error(new BusinessException(STATE_NOT_FOUND)))
+                .flatMap(state -> applicationRepository.findByStateIdAndPagination(pagination, state.getId()))
+                .flatMap(pagedApplications -> {
+                    Mono<List<ApplicationSummary>> summariesMono = Flux.fromIterable(pagedApplications.getContent())
+                            .flatMap(this::enrichAndMapApplicationToSummary)
+                            .collectList();
 
-        Mono<List<ApplicationSummary>> summariesMono = stateMono
-                .flatMapMany(state -> applicationRepository.findByStateIdAndPagination(page, size, state.getId()))
-                .flatMap(this::enrichAndMapApplicationToSummary)
-                .collectList();
-
-        return Mono.zip(summariesMono, countMono);
+                    return summariesMono.map(summaries -> PageModel.<ApplicationSummary>builder()
+                            .content(summaries)
+                            .page(pagedApplications.getPage())
+                            .size(pagedApplications.getSize())
+                            .totalElements(pagedApplications.getTotalElements())
+                            .totalPages(pagedApplications.getTotalPages())
+                            .build());
+                });
     }
 
     private Mono<ApplicationSummary> enrichAndMapApplicationToSummary(Application application) {

@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.r2dbc.config;
 
+import co.com.pragma.bootcamp.model.token.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,11 +26,15 @@ public class WebClientConfig {
     private ExchangeFilterFunction jwtAuthorizationFilter() {
         return (request, next) -> Mono.deferContextual(contextView -> {
             if (contextView.hasKey(TOKEN_KEY)) {
-                String token = contextView.get(TOKEN_KEY);
-                ClientRequest newRequest = ClientRequest.from(request)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                        .build();
-                return next.exchange(newRequest);
+                Object tokenObject = contextView.get(TOKEN_KEY);
+                if (tokenObject instanceof Token) {
+                    Token token = (Token) tokenObject;
+                    String jwtToken = token.getAccessToken();
+                    ClientRequest newRequest = ClientRequest.from(request)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
+                            .build();
+                    return next.exchange(newRequest);
+                }
             }
             return next.exchange(request);
         });

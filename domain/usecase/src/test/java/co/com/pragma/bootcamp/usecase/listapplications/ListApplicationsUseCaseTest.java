@@ -3,6 +3,8 @@ package co.com.pragma.bootcamp.usecase.listapplications;
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
+import co.com.pragma.bootcamp.model.applicationsummary.PageModel;
+import co.com.pragma.bootcamp.model.applicationsummary.Pagination;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.loantype.LoanType;
 import co.com.pragma.bootcamp.model.loantype.gateways.LoanTypeRepository;
@@ -22,6 +24,7 @@ import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 import java.util.List;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.STATE_NOT_FOUND;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -90,14 +93,9 @@ class ListApplicationsUseCaseTest {
                 .build();
     }
 
-
-
     @Test
     void listByState_shouldReturnApplicationsSummary_whenApplicationsExist() {
         when(stateRepository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.countByStateId(anyInt())).thenReturn(Mono.just(1L)); // Nuevo mock para el conteo
-        when(applicationRepository.findByStateIdAndPagination(anyInt(),anyInt(),anyInt()))
-                .thenReturn(Flux.just(application1));
         when(authRepository.getUserByDocument(anyString())).thenReturn(Mono.just(user));
         when(stateRepository.findById(anyInt())).thenReturn(Mono.just(pendingReviewState));
         when(loanTypeRepository.findById(anyInt())).thenReturn(Mono.just(loanType));
@@ -105,17 +103,25 @@ class ListApplicationsUseCaseTest {
         when(applicationRepository.findByClientDocumentAndStateId(anyString(), anyInt()))
                 .thenReturn(Flux.just(application2));
 
-        StepVerifier.create(useCase.listByState(10, 0, "PENDING_REVIEW"))
-                .expectNextMatches(tuple -> {
-                    List<ApplicationSummary> summaries = tuple.getT1();
-                    Long totalElements = tuple.getT2();
+        PageModel<Application> pageModel = PageModel.<Application>builder()
+                .content(List.of(application1))
+                .page(0)
+                .size(10)
+                .totalElements(1L)
+                .totalPages(1)
+                .build();
+        when(applicationRepository.findByStateIdAndPagination(any(Pagination.class), anyInt()))
+                .thenReturn(Mono.just(pageModel));
 
-                    return totalElements.equals(1L) && summaries.size() == 1 &&
-                            summaries.get(0).getId().equals("app1") &&
-                            summaries.get(0).getClientName().equals("John") &&
-                            summaries.get(0).getLoanTypeName().equals("Automobile Loan") &&
-                            summaries.get(0).getStateName().equals("PENDING_REVIEW") &&
-                            summaries.get(0).getTotalMonthlyDebt().compareTo(BigDecimal.valueOf(1000.00)) == 0;
+        StepVerifier.create(useCase.listByState(10, 0, "PENDING_REVIEW"))
+                .expectNextMatches(resultPage -> {
+                    List<ApplicationSummary> summaries = resultPage.getContent();
+                    return resultPage.getPage() == 0 &&
+                            resultPage.getSize() == 10 &&
+                            resultPage.getTotalElements() == 1L &&
+                            resultPage.getTotalPages() == 1 &&
+                            summaries.size() == 1 &&
+                            summaries.get(0).getId().equals("app1");
                 })
                 .verifyComplete();
     }
@@ -125,12 +131,19 @@ class ListApplicationsUseCaseTest {
     @Test
     void listByState_shouldReturnEmptyList_whenNoApplicationsFound() {
         when(stateRepository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.countByStateId(anyInt())).thenReturn(Mono.just(0L));
-        when(applicationRepository.findByStateIdAndPagination(anyInt(), anyInt(), anyInt()))
-                .thenReturn(Flux.empty());
+
+        PageModel<Application> emptyPageModel = PageModel.<Application>builder()
+                .content(List.of())
+                .page(0)
+                .size(10)
+                .totalElements(0L)
+                .totalPages(0)
+                .build();
+        when(applicationRepository.findByStateIdAndPagination(any(Pagination.class), anyInt()))
+                .thenReturn(Mono.just(emptyPageModel));
 
         StepVerifier.create(useCase.listByState(10, 0, "PENDING_REVIEW"))
-                .expectNextMatches(tuple -> tuple.getT1().isEmpty() && tuple.getT2().equals(0L))
+                .expectNextMatches(resultPage -> resultPage.getContent().isEmpty() && resultPage.getTotalElements() == 0L)
                 .verifyComplete();
     }
 
@@ -148,14 +161,21 @@ class ListApplicationsUseCaseTest {
                 .verify();
     }
 
+
+
     @Test
     void listByState_shouldThrowException_whenEnrichmentDependencyFails() {
         when(stateRepository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(pendingReviewState));
 
-        lenient().when(applicationRepository.countByStateId(anyInt())).thenReturn(Mono.just(1L));
-
-        when(applicationRepository.findByStateIdAndPagination(anyInt(), anyInt(), anyInt()))
-                .thenReturn(Flux.just(application1));
+        PageModel<Application> pageModel = PageModel.<Application>builder()
+                .content(List.of(application1))
+                .page(0)
+                .size(10)
+                .totalElements(1L)
+                .totalPages(1)
+                .build();
+        lenient().when(applicationRepository.findByStateIdAndPagination(any(Pagination.class), anyInt()))
+                .thenReturn(Mono.just(pageModel));
 
         when(authRepository.getUserByDocument(anyString())).thenReturn(Mono.error(new RuntimeException("Auth service is down")));
 

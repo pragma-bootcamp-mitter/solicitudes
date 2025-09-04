@@ -1,6 +1,6 @@
 package co.com.pragma.bootcamp.security.config;
 
-import co.com.pragma.bootcamp.security.jwt.TokenValidator;
+import co.com.pragma.bootcamp.usecase.token.TokenUseCase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -20,32 +20,28 @@ public class JwtAuthenticationFilter extends AuthenticationWebFilter {
 
     private static final String ROLE_PREFIX = "ROLE_";
     private static final String BEARER_PREFIX = "Bearer ";
+    private final TokenUseCase tokenUseCase;
 
-    private final TokenValidator tokenValidator;
-
-    public JwtAuthenticationFilter(ReactiveAuthenticationManager authenticationManager, TokenValidator tokenValidator) {
+    public JwtAuthenticationFilter(ReactiveAuthenticationManager authenticationManager, TokenUseCase tokenUseCase) {
         super(authenticationManager);
-        this.tokenValidator = tokenValidator;
+        this.tokenUseCase = tokenUseCase;
         setServerAuthenticationConverter(createAuthenticationConverter());
     }
 
     private ServerAuthenticationConverter createAuthenticationConverter() {
         return exchange -> Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION))
                 .filter(authHeader -> authHeader.startsWith(BEARER_PREFIX))
-                .map(authHeader -> authHeader.substring(BEARER_PREFIX.length()))
                 .flatMap(this::convertTokenToAuthentication)
                 .doOnError(e -> log.error("Error during authentication conversion: {}", e.getMessage()));
     }
 
-    private Mono<Authentication> convertTokenToAuthentication(String authToken) {
-        return tokenValidator.validateToken(authToken)
-                .map(claims -> {
-                    //aqui cambie el email por el document
-                    String document = claims.getSubject();
-                    String role = claims.get("role", String.class);
-                    //String email = claims.get("email", String.class);
+    private Mono<Authentication> convertTokenToAuthentication(String bearerToken) {
+        return tokenUseCase.authorize(bearerToken)
+                .map(token -> {
+                    String subject = token.getSubject();
+                    String role = token.getRole();
                     List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(ROLE_PREFIX + role));
-                    return new UsernamePasswordAuthenticationToken(document, null, authorities);
+                    return new UsernamePasswordAuthenticationToken(subject, null, authorities);
                 });
     }
 }

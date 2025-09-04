@@ -24,8 +24,9 @@ class ApiResponseTest {
         int page = 1;
         int size = 10;
         long totalElements = 25;
+        int totalPages = 5;
 
-        ApiResponse<SampleData> response = ApiResponse.success(sampleData, page, size, totalElements);
+        ApiResponse<SampleData> response = ApiResponse.success(sampleData, page, size, totalElements, totalPages);
 
         assertThat(response.getCode()).isEqualTo(SUCCESS_CODE);
         assertThat(response.getMessage()).isEqualTo(SUCCESS_MESSAGE);
@@ -74,8 +75,9 @@ class ApiResponseTest {
         Integer page = 1;
         Integer size = 10;
         Long totalElements = 50L;
+        Integer totalPages = 4;
 
-        ApiResponse<SampleData> apiResponse = new ApiResponse<>(code, message, title, data, errors, page, size, totalElements);
+        ApiResponse<SampleData> apiResponse = new ApiResponse<>(code, message, title, data, errors, page, size, totalElements, totalPages);
 
         assertThat(apiResponse.getCode()).isEqualTo(code);
         assertThat(apiResponse.getMessage()).isEqualTo(message);
@@ -83,7 +85,6 @@ class ApiResponseTest {
         assertThat(apiResponse.getData()).isEqualTo(data);
         assertThat(apiResponse.getErrors()).isEqualTo(errors);
 
-        // Verificaciones de los nuevos campos de paginación
         assertThat(apiResponse.getPage()).isEqualTo(page);
         assertThat(apiResponse.getSize()).isEqualTo(size);
         assertThat(apiResponse.getTotalElements()).isEqualTo(totalElements);

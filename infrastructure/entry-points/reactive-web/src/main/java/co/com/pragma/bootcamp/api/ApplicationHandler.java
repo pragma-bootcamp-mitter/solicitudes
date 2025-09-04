@@ -60,17 +60,16 @@ public class ApplicationHandler {
         int page = request.queryParam(PAGE).map(Integer::parseInt).orElse(0);
         String stateName = request.queryParam(STATE_NAME).orElse(PENDING_REVIEW_STATE);
         return listUseCase.listByState(size, page, stateName)
-                .flatMap(tuple -> {
-                    List<ApplicationSummary> applications = tuple.getT1();
-                    Long totalElements = tuple.getT2();
-                    List<ApplicationSummaryResponse> responseList = applications.stream()
-                            .map(mapper::toSummaryResponse)
-                            .toList();
+                .flatMap(pageModel -> {
                     ApiResponse<List<ApplicationSummaryResponse>> apiResponse = ApiResponse.success(
-                            responseList,
-                            page,
-                            size,
-                            totalElements);
+                            pageModel.getContent().stream()
+                                    .map(mapper::toSummaryResponse)
+                                    .toList(),
+                            pageModel.getPage(),
+                            pageModel.getSize(),
+                            pageModel.getTotalElements(),
+                            pageModel.getTotalPages()
+                    );
                     return ServerResponse.ok()
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(apiResponse);

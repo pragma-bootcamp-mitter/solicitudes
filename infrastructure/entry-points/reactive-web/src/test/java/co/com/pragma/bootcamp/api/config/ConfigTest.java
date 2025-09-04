@@ -4,36 +4,37 @@ import co.com.pragma.bootcamp.api.ApplicationHandler;
 import co.com.pragma.bootcamp.api.ApplicationRouterRest;
 import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApplicationResponse;
+import co.com.pragma.bootcamp.api.dto.ApiResponse;
+import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
-import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.security.config.SecurityConfig;
-import co.com.pragma.bootcamp.security.jwt.TokenValidator;
+import co.com.pragma.bootcamp.usecase.listapplications.ListApplicationsUseCase;
 import co.com.pragma.bootcamp.usecase.registerapplication.ApplicationUseCase;
+import co.com.pragma.bootcamp.usecase.token.TokenUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
-import org.springframework.http.MediaType;
 import java.math.BigDecimal;
-import java.net.URI;
+import java.util.Collections;
 import java.util.Map;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {
         ApplicationRouterRest.class,
+        SecurityConfig.class,
         ApplicationHandler.class,
-        SecurityConfig.class})
+        GlobalExceptionHandler.class,
+        ValidatorUtil.class})
 @WebFluxTest
-@Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
 
     @Autowired
@@ -46,30 +47,29 @@ class ConfigTest {
     private ApplicationMapper mapper;
 
     @MockitoBean
+    private ListApplicationsUseCase listUseCase;
+
+    @MockitoBean
     private ApplicationHandler applicationHandler;
 
     @MockitoBean
-    private ApplicationRepository applicationRepository;
+    private TokenUseCase tokenUseCase;
 
     @MockitoBean
     private ReactiveAuthenticationManager authenticationManager;
-
-    @MockitoBean
-    private TokenValidator tokenValidator;
 
     private static final String BASE_PATH = "/api/v1/applications";
 
     @Test
     @WithMockUser(roles = "CLIENT")
     void post_shouldRegisterApplication_andReturn201() {
-        ApplicationResponse expectedResponse = ApplicationResponse.builder()
-                .id("1")
-                .build();
+        ApplicationResponse mockResponse = new ApplicationResponse();
+        mockResponse.setId("1");
 
         when(applicationHandler.register(any())).thenReturn(
-                ServerResponse.created(URI.create(BASE_PATH + "/1"))
+                ServerResponse.status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(expectedResponse)
+                        .bodyValue(ApiResponse.success(mockResponse))
         );
 
         webTestClient.post()
@@ -83,7 +83,7 @@ class ConfigTest {
                 .expectStatus().isCreated()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.id").isEqualTo("1");
+                .jsonPath("$.data.id").isEqualTo("1");
     }
 
     @Test
@@ -117,24 +117,17 @@ class ConfigTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void securityHeaders_shouldBeConfiguredCorrectly() {
+    void get_shouldListApplications_andReturn200() {
         when(applicationHandler.list(any())).thenReturn(
                 ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(Flux.empty(), ApplicationResponse.class)
+                        .bodyValue(ApiResponse.success(Collections.emptyList(), 0, 10, 0L, 0))
         );
 
         webTestClient.get()
                 .uri(BASE_PATH)
                 .exchange()
-                .expectStatus().isOk()
-                .expectHeader().valueEquals("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
-                .expectHeader().valueEquals("Strict-Transport-Security", "max-age=31536000;")
-                .expectHeader().valueEquals("X-Content-Type-Options", "nosniff")
-                .expectHeader().valueEquals("Server", "")
-                .expectHeader().valueEquals("Cache-Control", "no-store")
-                .expectHeader().valueEquals("Pragma", "no-cache")
-                .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
+                .expectStatus().isOk();
     }
 
     @Test

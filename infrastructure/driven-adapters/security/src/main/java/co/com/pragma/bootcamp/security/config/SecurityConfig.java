@@ -1,6 +1,6 @@
 package co.com.pragma.bootcamp.security.config;
 
-import co.com.pragma.bootcamp.security.jwt.TokenValidator;
+import co.com.pragma.bootcamp.usecase.token.TokenUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,15 +19,13 @@ public class SecurityConfig {
 
     public static final String CLIENT = "CLIENT";
     private final ReactiveAuthenticationManager authenticationManager;
-    private final TokenValidator tokenValidator;
     public static final String ADMIN = "ADMIN";
     public static final String ADVISOR = "ADVISOR";
+    private final TokenUseCase tokenUseCase;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        AuthenticationWebFilter jwtFilter = new JwtAuthenticationFilter(authenticationManager, tokenValidator);
-
-
+        AuthenticationWebFilter jwtFilter = new JwtAuthenticationFilter(authenticationManager, tokenUseCase);
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges

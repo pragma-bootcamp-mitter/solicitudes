@@ -1,5 +1,7 @@
 package co.com.pragma.bootcamp.security.jwt;
 
+import co.com.pragma.bootcamp.model.token.gateways.TokenGateway;
+import co.com.pragma.bootcamp.model.token.Token;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -8,9 +10,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Component
-public class TokenValidator {
+public class TokenValidator implements TokenGateway {
 
     private final SecretKey secretKey;
 
@@ -18,12 +21,33 @@ public class TokenValidator {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public Mono<Claims> validateToken(String token) {
+    @Override
+    public Mono<Token> validateToken(String token) {
         return Mono.fromCallable(() -> Jwts.parser()
                         .verifyWith(this.secretKey)
                         .build()
                         .parseSignedClaims(token)
                         .getPayload())
-                .onErrorResume(e -> Mono.empty());
+                .map(claims -> mapClaimsToToken(claims, token))
+                .onErrorResume(e -> Mono.error(new RuntimeException("Token inválido o expirado")));
+    }
+
+    private Token mapClaimsToToken(Claims claims, String originalToken) {
+        return Token.builder()
+                .subject(claims.getSubject())
+                .role(claims.get("role", String.class))
+                .permissions(getPermissions(claims))
+                .accessToken(originalToken)
+                .build();
+    }
+
+    private List<String> getPermissions(Claims claims) {
+        Object permissionsObject = claims.get("permissions");
+        if (permissionsObject instanceof List) {
+            return ((List<?>) permissionsObject).stream()
+                    .map(Object::toString)
+                    .toList();
+        }
+        return List.of();
     }
 }

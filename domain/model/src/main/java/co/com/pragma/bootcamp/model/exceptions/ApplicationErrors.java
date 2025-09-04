@@ -6,7 +6,6 @@ public enum ApplicationErrors {
     CLIENT_NOT_FOUND(BusinessErrorCode.BR_404_NOT_FOUND, "Client not found"),
     STATE_NOT_FOUND(BusinessErrorCode.BR_404_NOT_FOUND, "State not found"),
     UNAUTHORIZED_OPERATION(BusinessErrorCode.BR_403_FORBIDDEN, "Unauthorized operation");
-    ;
 
     private final BusinessErrorCode errorCode;
     private final String message;

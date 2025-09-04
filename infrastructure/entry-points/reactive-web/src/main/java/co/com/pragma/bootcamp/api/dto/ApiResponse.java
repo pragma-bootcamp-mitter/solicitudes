@@ -30,6 +30,7 @@ public class ApiResponse<T> {
     private Integer page;
     private Integer size;
     private Long totalElements;
+    private int totalPages;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
@@ -57,7 +58,7 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    public static <T> ApiResponse<T> success(T data, int page, int size, long totalElements) {
+    public static <T> ApiResponse<T> success(T data, int page, int size, long totalElements, int totalPages) {
         return ApiResponse.<T>builder()
                 .code(SUCCESS_CODE)
                 .message(SUCCESS_MESSAGE)
@@ -66,6 +67,7 @@ public class ApiResponse<T> {
                 .page(page)
                 .size(size)
                 .totalElements(totalElements)
+                .totalPages(totalPages)
                 .build();
     }
 }

@@ -6,14 +6,12 @@ import co.com.pragma.bootcamp.api.dto.ApplicationSummaryResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
 import co.com.pragma.bootcamp.model.application.Application;
-import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
 import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
+import co.com.pragma.bootcamp.model.applicationsummary.PageModel;
 import co.com.pragma.bootcamp.usecase.listapplications.ListApplicationsUseCase;
 import co.com.pragma.bootcamp.usecase.registerapplication.ApplicationUseCase;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,26 +19,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import java.util.Collections;
+import java.util.Set;
+
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationHandlerTest {
@@ -53,9 +53,6 @@ class ApplicationHandlerTest {
 
     @Mock
     private ApplicationUseCase useCase;
-
-    @Mock
-    private ApplicationRepository applicationRepository;
 
     @Mock
     private ApplicationMapper mapper;
@@ -133,7 +130,6 @@ class ApplicationHandlerTest {
         );
         SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
-
         when(serverRequest.bodyToMono(ApplicationRequest.class)).thenReturn(Mono.just(testApplicationRequest));
         when(validatorUtil.validate(any(ApplicationRequest.class))).thenReturn(Mono.just(testApplicationRequest));
         when(mapper.toDomain(any(ApplicationRequest.class))).thenReturn(testApplicationDomain);
@@ -163,7 +159,6 @@ class ApplicationHandlerTest {
         );
         SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
-
         when(serverRequest.bodyToMono(ApplicationRequest.class)).thenReturn(Mono.just(invalidApplicationRequest));
         when(validatorUtil.validate(any(ApplicationRequest.class))).thenReturn(Mono.error(validationException));
 
@@ -177,13 +172,21 @@ class ApplicationHandlerTest {
 
     @Test
     void list_shouldReturnOk_whenApplicationsExist() {
-        Mono<List<ApplicationSummary>> applicationsMono = Mono.just(List.of(testApplicationSummary));
-        Mono<Long> totalElementsMono = Mono.just(1L);
+        // Mockear el nuevo comportamiento: devolver un Mono<PageModel>
+        PageModel<ApplicationSummary> pageModel = PageModel.<ApplicationSummary>builder()
+                .content(List.of(testApplicationSummary))
+                .page(0)
+                .size(10)
+                .totalElements(1L)
+                .totalPages(1)
+                .build();
         when(listUseCase.listByState(anyInt(), anyInt(), anyString()))
-                .thenReturn(Mono.zip(applicationsMono, totalElementsMono));
+                .thenReturn(Mono.just(pageModel));
 
+        // Mockear el mapper
         when(mapper.toSummaryResponse(any(ApplicationSummary.class))).thenReturn(testApplicationSummaryResponse);
 
+        // Mockear los parámetros de la request
         when(serverRequest.queryParam("stateName")).thenReturn(Optional.of("PENDING_REVIEW"));
         when(serverRequest.queryParam("page")).thenReturn(Optional.of("0"));
         when(serverRequest.queryParam("size")).thenReturn(Optional.of("10"));
@@ -197,14 +200,20 @@ class ApplicationHandlerTest {
                 .verifyComplete();
     }
 
-
     @Test
     void list_shouldReturnOk_whenNoApplicationsExist() {
-        Mono<List<ApplicationSummary>> emptyListMono = Mono.just(List.of());
-        Mono<Long> zeroElementsMono = Mono.just(0L);
+        // Mockear el nuevo comportamiento con una lista vacía
+        PageModel<ApplicationSummary> emptyPageModel = PageModel.<ApplicationSummary>builder()
+                .content(List.of())
+                .page(0)
+                .size(10)
+                .totalElements(0L)
+                .totalPages(0)
+                .build();
         when(listUseCase.listByState(anyInt(), anyInt(), anyString()))
-                .thenReturn(Mono.zip(emptyListMono, zeroElementsMono));
+                .thenReturn(Mono.just(emptyPageModel));
 
+        // Mockear los parámetros de la request
         when(serverRequest.queryParam("stateName")).thenReturn(Optional.of("PENDING_REVIEW"));
         when(serverRequest.queryParam("page")).thenReturn(Optional.of("0"));
         when(serverRequest.queryParam("size")).thenReturn(Optional.of("10"));
