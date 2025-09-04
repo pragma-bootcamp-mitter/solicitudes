@@ -35,7 +35,7 @@ public class AuthClient {
                         }
                         case CLIENT_ERROR -> {
                             log.warn("Client error when consulting user {}: {}", document, response.statusCode());
-                            yield Mono.error(new BusinessException(CLIENT_NOT_FOUND));
+                            yield Mono.empty();
                         }
                         default -> {
                             log.error("Unexpected error when consulting user {}, status: {}", document, response.statusCode());

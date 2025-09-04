@@ -27,6 +27,10 @@ public class ApiResponse<T> {
     private T data;
     private List<Map<String, String>> errors;
 
+    private Integer page;
+    private Integer size;
+    private Long totalElements;
+
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
                 .code(SUCCESS_CODE)
@@ -50,6 +54,18 @@ public class ApiResponse<T> {
                 .message(VALIDATION_ERROR_MESSAGE)
                 .title(BAD_REQUEST_TITLE)
                 .errors(errors)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> success(T data, int page, int size, long totalElements) {
+        return ApiResponse.<T>builder()
+                .code(SUCCESS_CODE)
+                .message(SUCCESS_MESSAGE)
+                .title(SUCCESS_TITLE)
+                .data(data)
+                .page(page)
+                .size(size)
+                .totalElements(totalElements)
                 .build();
     }
 }

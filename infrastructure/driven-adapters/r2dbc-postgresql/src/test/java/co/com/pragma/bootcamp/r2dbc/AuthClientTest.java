@@ -1,6 +1,5 @@
 package co.com.pragma.bootcamp.r2dbc;
 
-import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.r2dbc.webclient.AuthClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +11,6 @@ import org.springframework.web.reactive.function.client.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.CLIENT_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -50,15 +48,11 @@ class AuthClientTest {
     }
 
     @Test
-    void getUserByDocument_clientError_throwsBusinessException() {
+    void getUserByDocument_clientError_returnsEmpty() {
         ClientResponse clientResponse = ClientResponse.create(HttpStatus.NOT_FOUND).build();
         when(exchangeFunction.exchange(any())).thenReturn(Mono.just(clientResponse));
-
         StepVerifier.create(authClient.getUserByDocument("99999"))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof BusinessException &&
-                                ((BusinessException) throwable).getMessage().equals(CLIENT_NOT_FOUND.getMessage()))
-                .verify();
+                .verifyComplete();
     }
 
     @Test

@@ -28,14 +28,17 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -174,11 +177,16 @@ class ApplicationHandlerTest {
 
     @Test
     void list_shouldReturnOk_whenApplicationsExist() {
-        when(listUseCase.listAll(any(), any())).thenReturn(Flux.just(testApplicationSummary));
-        when(mapper.toSummaryResponse(any())).thenReturn(testApplicationSummaryResponse);
-        when(serverRequest.queryParam("stateName")).thenReturn(java.util.Optional.of("PENDING_REVIEW"));
-        when(serverRequest.queryParam("page")).thenReturn(java.util.Optional.of("0"));
-        when(serverRequest.queryParam("size")).thenReturn(java.util.Optional.of("10"));
+        Mono<List<ApplicationSummary>> applicationsMono = Mono.just(List.of(testApplicationSummary));
+        Mono<Long> totalElementsMono = Mono.just(1L);
+        when(listUseCase.listByState(anyInt(), anyInt(), anyString()))
+                .thenReturn(Mono.zip(applicationsMono, totalElementsMono));
+
+        when(mapper.toSummaryResponse(any(ApplicationSummary.class))).thenReturn(testApplicationSummaryResponse);
+
+        when(serverRequest.queryParam("stateName")).thenReturn(Optional.of("PENDING_REVIEW"));
+        when(serverRequest.queryParam("page")).thenReturn(Optional.of("0"));
+        when(serverRequest.queryParam("size")).thenReturn(Optional.of("10"));
 
         Mono<ServerResponse> responseMono = applicationHandler.list(serverRequest);
 
@@ -189,12 +197,17 @@ class ApplicationHandlerTest {
                 .verifyComplete();
     }
 
+
     @Test
     void list_shouldReturnOk_whenNoApplicationsExist() {
-        when(listUseCase.listAll(any(), any())).thenReturn(Flux.empty());
-        when(serverRequest.queryParam("stateName")).thenReturn(java.util.Optional.of("PENDING_REVIEW"));
-        when(serverRequest.queryParam("page")).thenReturn(java.util.Optional.of("0"));
-        when(serverRequest.queryParam("size")).thenReturn(java.util.Optional.of("10"));
+        Mono<List<ApplicationSummary>> emptyListMono = Mono.just(List.of());
+        Mono<Long> zeroElementsMono = Mono.just(0L);
+        when(listUseCase.listByState(anyInt(), anyInt(), anyString()))
+                .thenReturn(Mono.zip(emptyListMono, zeroElementsMono));
+
+        when(serverRequest.queryParam("stateName")).thenReturn(Optional.of("PENDING_REVIEW"));
+        when(serverRequest.queryParam("page")).thenReturn(Optional.of("0"));
+        when(serverRequest.queryParam("size")).thenReturn(Optional.of("10"));
 
         Mono<ServerResponse> responseMono = applicationHandler.list(serverRequest);
 

@@ -73,30 +73,6 @@ public class ApplicationRouterRest {
         return route(POST(BASE_PATH), applicationHandler::register);
     }
 
-    @Bean
-    @RouterOperation(
-            path = BASE_PATH,
-            produces = {"application/json"},
-            method = RequestMethod.GET,
-            beanClass = ApplicationHandler.class,
-            beanMethod = "list",
-            operation = @Operation(
-                    operationId = "listApplications",
-                    summary = "List all applications",
-                    description = "Retrieves all registered applications",
-                    tags = {"Applications"},
-                    responses = {
-                            @ApiResponse(responseCode = "200", description = "List of applications",
-                                    content = @Content(schema = @Schema(implementation = ApplicationResponse.class))),
-                            @ApiResponse(responseCode = "204", description = "No applications registered"),
-                            @ApiResponse(responseCode = "500", description = "Internal Server Error")
-                    }
-            )
-    )
-    public RouterFunction<ServerResponse> listApplicationsRoute(ApplicationHandler applicationHandler) {
-        return route(GET(BASE_PATH), applicationHandler::list);
-    }
-
 
     @Bean
     @RouterOperation(

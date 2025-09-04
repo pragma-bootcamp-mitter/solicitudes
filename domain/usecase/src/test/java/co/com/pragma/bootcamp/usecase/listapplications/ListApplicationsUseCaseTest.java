@@ -2,7 +2,7 @@ package co.com.pragma.bootcamp.usecase.listapplications;
 
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
-import co.com.pragma.bootcamp.model.applicationsummary.Pagination;
+import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
 import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.loantype.LoanType;
 import co.com.pragma.bootcamp.model.loantype.gateways.LoanTypeRepository;
@@ -20,10 +20,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
+import java.util.List;
 import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.STATE_NOT_FOUND;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,13 +51,9 @@ class ListApplicationsUseCaseTest {
     private Application application2;
     private User user;
     private LoanType loanType;
-    private Pagination pagination;
 
     @BeforeEach
     void setUp() {
-
-        pagination = Pagination.builder().page(0).size(10).build();
-
         pendingReviewState = State.builder().id(1).name("PENDING_REVIEW").build();
         approvedState = State.builder().id(2).name("APPROVED").build();
 
@@ -93,10 +90,13 @@ class ListApplicationsUseCaseTest {
                 .build();
     }
 
+
+
     @Test
-    void listAll_shouldReturnApplicationsSummary_whenApplicationsExist() {
+    void listByState_shouldReturnApplicationsSummary_whenApplicationsExist() {
         when(stateRepository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.findByStateIdAndPagination(anyInt(), any(Pagination.class)))
+        when(applicationRepository.countByStateId(anyInt())).thenReturn(Mono.just(1L)); // Nuevo mock para el conteo
+        when(applicationRepository.findByStateIdAndPagination(anyInt(),anyInt(),anyInt()))
                 .thenReturn(Flux.just(application1));
         when(authRepository.getUserByDocument(anyString())).thenReturn(Mono.just(user));
         when(stateRepository.findById(anyInt())).thenReturn(Mono.just(pendingReviewState));
@@ -105,35 +105,42 @@ class ListApplicationsUseCaseTest {
         when(applicationRepository.findByClientDocumentAndStateId(anyString(), anyInt()))
                 .thenReturn(Flux.just(application2));
 
-        StepVerifier.create(useCase.listAll(pagination, "PENDING_REVIEW"))
-                .expectNextMatches(summary -> {
-                    return summary.getId().equals("app1") &&
-                            summary.getClientName().equals("John") &&
-                            summary.getLoanTypeName().equals("Automobile Loan") &&
-                            summary.getStateName().equals("PENDING_REVIEW") &&
-                            summary.getTotalMonthlyDebt().compareTo(BigDecimal.valueOf(1000.00)) == 0;
+        StepVerifier.create(useCase.listByState(10, 0, "PENDING_REVIEW"))
+                .expectNextMatches(tuple -> {
+                    List<ApplicationSummary> summaries = tuple.getT1();
+                    Long totalElements = tuple.getT2();
+
+                    return totalElements.equals(1L) && summaries.size() == 1 &&
+                            summaries.get(0).getId().equals("app1") &&
+                            summaries.get(0).getClientName().equals("John") &&
+                            summaries.get(0).getLoanTypeName().equals("Automobile Loan") &&
+                            summaries.get(0).getStateName().equals("PENDING_REVIEW") &&
+                            summaries.get(0).getTotalMonthlyDebt().compareTo(BigDecimal.valueOf(1000.00)) == 0;
                 })
                 .verifyComplete();
     }
 
-    // ---
+
 
     @Test
-    void listAll_shouldReturnEmptyFlux_whenNoApplicationsFound() {
+    void listByState_shouldReturnEmptyList_whenNoApplicationsFound() {
         when(stateRepository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.findByStateIdAndPagination(anyInt(), any(Pagination.class)))
+        when(applicationRepository.countByStateId(anyInt())).thenReturn(Mono.just(0L));
+        when(applicationRepository.findByStateIdAndPagination(anyInt(), anyInt(), anyInt()))
                 .thenReturn(Flux.empty());
 
-        StepVerifier.create(useCase.listAll(pagination, "PENDING_REVIEW"))
-                .expectNextCount(0)
+        StepVerifier.create(useCase.listByState(10, 0, "PENDING_REVIEW"))
+                .expectNextMatches(tuple -> tuple.getT1().isEmpty() && tuple.getT2().equals(0L))
                 .verifyComplete();
     }
 
+
+
     @Test
-    void listAll_shouldThrowException_whenStateNotFound() {
+    void listByState_shouldThrowException_whenStateNotFound() {
         when(stateRepository.findByName("NON_EXISTENT_STATE")).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.listAll(pagination, "NON_EXISTENT_STATE"))
+        StepVerifier.create(useCase.listByState(10, 0, "NON_EXISTENT_STATE"))
                 .expectErrorMatches(throwable ->
                         throwable instanceof BusinessException &&
                                 throwable.getMessage().equals(STATE_NOT_FOUND.getMessage())
@@ -142,14 +149,17 @@ class ListApplicationsUseCaseTest {
     }
 
     @Test
-    void listAll_shouldThrowException_whenEnrichmentDependencyFails() {
+    void listByState_shouldThrowException_whenEnrichmentDependencyFails() {
         when(stateRepository.findByName("PENDING_REVIEW")).thenReturn(Mono.just(pendingReviewState));
-        when(applicationRepository.findByStateIdAndPagination(anyInt(), any(Pagination.class)))
+
+        lenient().when(applicationRepository.countByStateId(anyInt())).thenReturn(Mono.just(1L));
+
+        when(applicationRepository.findByStateIdAndPagination(anyInt(), anyInt(), anyInt()))
                 .thenReturn(Flux.just(application1));
 
         when(authRepository.getUserByDocument(anyString())).thenReturn(Mono.error(new RuntimeException("Auth service is down")));
 
-        StepVerifier.create(useCase.listAll(pagination, "PENDING_REVIEW"))
+        StepVerifier.create(useCase.listByState(10, 0, "PENDING_REVIEW"))
                 .expectError(RuntimeException.class)
                 .verify();
     }

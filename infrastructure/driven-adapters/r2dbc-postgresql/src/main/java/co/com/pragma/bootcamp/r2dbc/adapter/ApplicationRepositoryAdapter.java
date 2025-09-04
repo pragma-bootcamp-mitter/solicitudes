@@ -1,10 +1,10 @@
 package co.com.pragma.bootcamp.r2dbc.adapter;
 
-import co.com.pragma.bootcamp.model.applicationsummary.Pagination;
 import co.com.pragma.bootcamp.r2dbc.ApplicationEntityRepository;
 import co.com.pragma.bootcamp.r2dbc.entity.ApplicationEntity;
 import co.com.pragma.bootcamp.r2dbc.helper.ReactiveAdapterOperations;
 import co.com.pragma.bootcamp.r2dbc.mapper.ApplicationEntityMapper;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import co.com.pragma.bootcamp.model.application.Application;
 import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
@@ -46,8 +46,8 @@ public class ApplicationRepositoryAdapter
     }
 
     @Override
-    public Flux<Application> findByStateIdAndPagination(Integer stateId, Pagination pagination) {
-        return repository.findByStateId(stateId, pagination)
+    public Flux<Application> findByStateIdAndPagination(int page, int size, Integer stateId) {
+        return repository.findByStateId(stateId, PageRequest.of(page, size))
                 .map(applicationEntityMapper::toDomain);
     }
 
@@ -57,5 +57,9 @@ public class ApplicationRepositoryAdapter
                 .map(applicationEntityMapper::toDomain);
     }
 
+    @Override
+    public Mono<Long> countByStateId(Integer stateId) {
+        return repository.countByStateId(stateId);
+    }
 }
 

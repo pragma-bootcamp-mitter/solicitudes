@@ -17,21 +17,24 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    public static final String CLIENT = "CLIENT";
     private final ReactiveAuthenticationManager authenticationManager;
     private final TokenValidator tokenValidator;
     public static final String ADMIN = "ADMIN";
+    public static final String ADVISOR = "ADVISOR";
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         AuthenticationWebFilter jwtFilter = new JwtAuthenticationFilter(authenticationManager, tokenValidator);
+
 
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/swagger-ui/**").permitAll()
                         .pathMatchers("/v3/api-docs/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/v1/applications/**").hasAnyRole(ADMIN, "ADVISOR", "CLIENT")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/applications/**").hasRole(ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/api/v1/applications/**").hasAnyRole(ADMIN, ADVISOR, CLIENT)
+                        .pathMatchers(HttpMethod.GET, "/api/v1/applications/**").hasAnyRole(ADMIN, ADVISOR)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)

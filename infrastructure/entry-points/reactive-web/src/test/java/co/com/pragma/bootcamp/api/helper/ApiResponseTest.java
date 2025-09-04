@@ -7,12 +7,36 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SUCCESS_CODE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SUCCESS_MESSAGE;
+import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.SUCCESS_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ApiResponseTest {
 
     private static class SampleData {
         public String value = "test";
+    }
+
+    @Test
+    void testSuccessWithPaginationMethod() {
+        SampleData sampleData = new SampleData();
+        int page = 1;
+        int size = 10;
+        long totalElements = 25;
+
+        ApiResponse<SampleData> response = ApiResponse.success(sampleData, page, size, totalElements);
+
+        assertThat(response.getCode()).isEqualTo(SUCCESS_CODE);
+        assertThat(response.getMessage()).isEqualTo(SUCCESS_MESSAGE);
+        assertThat(response.getTitle()).isEqualTo(SUCCESS_TITLE);
+        assertThat(response.getData()).isEqualTo(sampleData);
+        assertThat(response.getErrors()).isNull();
+
+        // Assertions para los nuevos campos de paginación
+        assertThat(response.getPage()).isEqualTo(page);
+        assertThat(response.getSize()).isEqualTo(size);
+        assertThat(response.getTotalElements()).isEqualTo(totalElements);
     }
 
     @Test
@@ -38,21 +62,31 @@ class ApiResponseTest {
         assertThat(apiResponse.getErrors()).isEqualTo(errors);
     }
 
+
     @Test
     void testAllArgsConstructor() {
         String code = "B100";
-        String message = "Mensaje de prueba";
-        String title = "Título de prueba";
+        String message = "Test message";
+        String title = "Test title";
         SampleData data = new SampleData();
-        List<Map<String, String>> errors = List.of(Map.of("field", "email", "defaultMessage", "email inválido"));
+        List<Map<String, String>> errors = List.of(Map.of("field", "email", "defaultMessage", "Invalid email"));
 
-        ApiResponse<SampleData> apiResponse = new ApiResponse<>(code, message, title, data, errors);
+        Integer page = 1;
+        Integer size = 10;
+        Long totalElements = 50L;
+
+        ApiResponse<SampleData> apiResponse = new ApiResponse<>(code, message, title, data, errors, page, size, totalElements);
 
         assertThat(apiResponse.getCode()).isEqualTo(code);
         assertThat(apiResponse.getMessage()).isEqualTo(message);
         assertThat(apiResponse.getTitle()).isEqualTo(title);
         assertThat(apiResponse.getData()).isEqualTo(data);
         assertThat(apiResponse.getErrors()).isEqualTo(errors);
+
+        // Verificaciones de los nuevos campos de paginación
+        assertThat(apiResponse.getPage()).isEqualTo(page);
+        assertThat(apiResponse.getSize()).isEqualTo(size);
+        assertThat(apiResponse.getTotalElements()).isEqualTo(totalElements);
     }
 
     @Test

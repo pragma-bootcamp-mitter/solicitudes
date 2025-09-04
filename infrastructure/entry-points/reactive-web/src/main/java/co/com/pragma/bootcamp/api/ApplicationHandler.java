@@ -2,10 +2,10 @@ package co.com.pragma.bootcamp.api;
 
 import co.com.pragma.bootcamp.api.dto.ApplicationRequest;
 import co.com.pragma.bootcamp.api.dto.ApiResponse;
+import co.com.pragma.bootcamp.api.dto.ApplicationSummaryResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
-import co.com.pragma.bootcamp.model.application.gateways.ApplicationRepository;
-import co.com.pragma.bootcamp.model.applicationsummary.Pagination;
+import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
 import co.com.pragma.bootcamp.usecase.listapplications.ListApplicationsUseCase;
 import co.com.pragma.bootcamp.usecase.registerapplication.ApplicationUseCase;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +18,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
-import java.util.Optional;
+import java.util.List;
+
+import static co.com.pragma.bootcamp.usecase.registerapplication.helper.DomainConstants.PENDING_REVIEW_STATE;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ApplicationHandler {
 
+    public static final String SIZE = "size";
+    public static final String PAGE = "page";
+    public static final String STATE_NAME = "stateName";
     private final ApplicationUseCase useCase;
-    private final ApplicationRepository applicationRepository;
     private final ListApplicationsUseCase listUseCase;
     private final ApplicationMapper mapper;
     private final ValidatorUtil validatorUtil;
@@ -52,27 +56,24 @@ public class ApplicationHandler {
     }
 
     public Mono<ServerResponse> list(ServerRequest request) {
-        Optional<String> stateNameParam = request.queryParam("stateName");
-        Optional<String> pageParam = request.queryParam("page");
-        Optional<String> sizeParam = request.queryParam("size");
-
-        int page = pageParam.map(Integer::parseInt).orElse(0);
-        int size = sizeParam.map(Integer::parseInt).orElse(10);
-        String stateName = stateNameParam.orElse("PENDING_REVIEW");
-
-        Pagination pagination = Pagination.builder()
-                .page(page)
-                .size(size)
-                .build();
-
-        return listUseCase.listAll(pagination, stateName)
-                .map(mapper::toSummaryResponse)
-                .collectList()
-                .flatMap(list ->
-                        ServerResponse.ok()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(ApiResponse.success(list))
-                );
+        int size = request.queryParam(SIZE).map(Integer::parseInt).orElse(10);
+        int page = request.queryParam(PAGE).map(Integer::parseInt).orElse(0);
+        String stateName = request.queryParam(STATE_NAME).orElse(PENDING_REVIEW_STATE);
+        return listUseCase.listByState(size, page, stateName)
+                .flatMap(tuple -> {
+                    List<ApplicationSummary> applications = tuple.getT1();
+                    Long totalElements = tuple.getT2();
+                    List<ApplicationSummaryResponse> responseList = applications.stream()
+                            .map(mapper::toSummaryResponse)
+                            .toList();
+                    ApiResponse<List<ApplicationSummaryResponse>> apiResponse = ApiResponse.success(
+                            responseList,
+                            page,
+                            size,
+                            totalElements);
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(apiResponse);
+                });
     }
-
 }
