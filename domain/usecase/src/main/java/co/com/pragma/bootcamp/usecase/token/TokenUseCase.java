@@ -16,9 +16,9 @@ public class TokenUseCase {
     public Mono<Token> authorize(String bearerToken) {
         return Mono.justOrEmpty(bearerToken)
                 .filter(token -> token.startsWith("Bearer "))
-                .switchIfEmpty(Mono.error(new BusinessException(UNAUTHORIZED_OPERATION))) //"Token inválido: prefijo 'Bearer ' faltante"
+                .switchIfEmpty(Mono.error(new BusinessException(UNAUTHORIZED_OPERATION)))
                 .map(token -> token.substring(7))
                 .flatMap(tokenGateway::validateToken)
-                .onErrorResume(e -> Mono.error(new BusinessException(UNAUTHORIZED_OPERATION))); //"Token inválido o expirado", e)
+                .onErrorResume(e -> Mono.error(new BusinessException(UNAUTHORIZED_OPERATION)));
     }
 }

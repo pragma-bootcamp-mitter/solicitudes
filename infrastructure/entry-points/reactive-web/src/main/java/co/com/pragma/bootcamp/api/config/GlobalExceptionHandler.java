@@ -11,12 +11,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 
 import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.ERROR_KEY;
 import static co.com.pragma.bootcamp.api.helper.ApplicationConstants.FIELD_KEY;
@@ -36,7 +42,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-        log.error("Handling exception: {}", ex.getMessage());
+        log.error("Handling exception: {}", ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
 
         return switch (ex) {
             case BusinessException businessEx -> {
@@ -100,4 +106,27 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }
+
+    public ServerAuthenticationEntryPoint authenticationEntryPoint() {
+        return (exchange, ex) -> {
+            ApiResponse<?> apiResponse = ApiResponse.businessError(
+                    BusinessErrorCode.BR_401_UNAUTHORIZED.getCode(),
+                    "Unauthorized",
+                    "Invalid or missing authentication token"
+            );
+            return buildErrorResponse(exchange, HttpStatus.UNAUTHORIZED, apiResponse);
+        };
+    }
+
+    public ServerAccessDeniedHandler accessDeniedHandler() {
+        return (exchange, ex) -> {
+            ApiResponse<?> apiResponse = ApiResponse.businessError(
+                    BusinessErrorCode.BR_403_FORBIDDEN.getCode(),
+                    "Forbidden",
+                    "You do not have permission to perform this operation"
+            );
+            return buildErrorResponse(exchange, HttpStatus.FORBIDDEN, apiResponse);
+        };
+    }
+
 }

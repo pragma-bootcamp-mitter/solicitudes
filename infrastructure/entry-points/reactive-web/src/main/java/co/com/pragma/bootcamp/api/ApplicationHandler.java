@@ -5,7 +5,6 @@ import co.com.pragma.bootcamp.api.dto.ApiResponse;
 import co.com.pragma.bootcamp.api.dto.ApplicationSummaryResponse;
 import co.com.pragma.bootcamp.api.helper.ValidatorUtil;
 import co.com.pragma.bootcamp.api.mapper.ApplicationMapper;
-import co.com.pragma.bootcamp.model.applicationsummary.ApplicationSummary;
 import co.com.pragma.bootcamp.usecase.listapplications.ListApplicationsUseCase;
 import co.com.pragma.bootcamp.usecase.registerapplication.ApplicationUseCase;
 import lombok.RequiredArgsConstructor;

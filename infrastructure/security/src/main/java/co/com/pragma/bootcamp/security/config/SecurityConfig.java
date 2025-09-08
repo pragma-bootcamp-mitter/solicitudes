@@ -35,6 +35,10 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/api/v1/applications/**").hasAnyRole(ADMIN, ADVISOR)
                         .anyExchange().authenticated()
                 )
+/*                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(securityExceptionHandlers.authenticationEntryPoint())
+                        .accessDeniedHandler(securityExceptionHandlers.accessDeniedHandler())
+                )*/
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
