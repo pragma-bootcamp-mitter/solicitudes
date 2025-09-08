@@ -30,7 +30,7 @@ public class ApiResponse<T> {
     private Integer page;
     private Integer size;
     private Long totalElements;
-    private int totalPages;
+    private Integer totalPages;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
