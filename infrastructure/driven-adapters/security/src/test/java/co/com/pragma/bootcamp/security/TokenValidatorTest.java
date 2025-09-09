@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.security;
 
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.token.Token;
 import co.com.pragma.bootcamp.security.jwt.TokenValidator;
 import io.jsonwebtoken.Jwts;
@@ -15,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.UNAUTHORIZED_OPERATION;
 
 @ExtendWith(MockitoExtension.class)
 class TokenValidatorTest {
@@ -75,13 +78,11 @@ class TokenValidatorTest {
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
-                        throwable instanceof RuntimeException &&
-                                throwable.getMessage().equals("Token inválido o expirado")
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getApplicationError().equals(UNAUTHORIZED_OPERATION)
                 )
                 .verify();
     }
-
-
 
     @Test
     void validateToken_shouldThrowException_whenTokenIsInvalid() {
@@ -91,13 +92,11 @@ class TokenValidatorTest {
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
-                        throwable instanceof RuntimeException &&
-                                throwable.getMessage().equals("Token inválido o expirado")
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getApplicationError().equals(UNAUTHORIZED_OPERATION)
                 )
                 .verify();
     }
-
-
 
     @Test
     void validateToken_shouldThrowException_whenTokenHasInvalidSignature() {
@@ -116,8 +115,8 @@ class TokenValidatorTest {
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
-                        throwable instanceof RuntimeException &&
-                                throwable.getMessage().equals("Token inválido o expirado")
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getApplicationError().equals(UNAUTHORIZED_OPERATION)
                 )
                 .verify();
     }

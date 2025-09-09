@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.security.jwt;
 
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.model.token.gateways.TokenGateway;
 import co.com.pragma.bootcamp.model.token.Token;
 import io.jsonwebtoken.Claims;
@@ -11,6 +12,8 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import static co.com.pragma.bootcamp.model.exceptions.ApplicationErrors.UNAUTHORIZED_OPERATION;
 
 @Component
 public class TokenValidator implements TokenGateway {
@@ -29,7 +32,7 @@ public class TokenValidator implements TokenGateway {
                         .parseSignedClaims(token)
                         .getPayload())
                 .map(claims -> mapClaimsToToken(claims, token))
-                .onErrorResume(e -> Mono.error(new RuntimeException("Token inválido o expirado")));
+                .onErrorResume(e -> Mono.error(new BusinessException(UNAUTHORIZED_OPERATION)));
     }
 
     private Token mapClaimsToToken(Claims claims, String originalToken) {

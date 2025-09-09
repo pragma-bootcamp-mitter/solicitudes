@@ -1,5 +1,6 @@
 package co.com.pragma.bootcamp.r2dbc;
 
+import co.com.pragma.bootcamp.model.exceptions.BusinessException;
 import co.com.pragma.bootcamp.r2dbc.webclient.AuthClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,11 +49,12 @@ class AuthClientTest {
     }
 
     @Test
-    void getUserByDocument_clientError_returnsEmpty() {
+    void getUserByDocument_clientError_throwsBusinessException() {
         ClientResponse clientResponse = ClientResponse.create(HttpStatus.NOT_FOUND).build();
         when(exchangeFunction.exchange(any())).thenReturn(Mono.just(clientResponse));
         StepVerifier.create(authClient.getUserByDocument("99999"))
-                .verifyComplete();
+                .expectError(BusinessException.class)
+                .verify();
     }
 
     @Test

@@ -5,6 +5,7 @@ public enum BusinessErrorCode {
     BR_409_CONFLICT("BR_409_CONFLICT", "Conflict with existing data"),
     BR_404_NOT_FOUND("BR_404_NOT_FOUND", "Resource not found"),
     BR_403_FORBIDDEN("BR_403_FORBIDDEN", "Operation forbidden"),
+    BR_401_UNAUTHORIZED("BR_401_UNAUTHORIZED", "Unauthorized access"),
     BR_500_INTERNAL_SERVER_ERROR("BR_500_INTERNAL_SERVER_ERROR", "An unexpected error occurred");
 
     private final String code;
